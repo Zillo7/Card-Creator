@@ -113,7 +113,6 @@ namespace CardCreator
         }
 
         private void ConfigureSheet()
-        {
             var dlg = new SheetDialog(_sheetColumns, _sheetRows, _useJpeg) { Owner = Application.Current.MainWindow };
             if (dlg.ShowDialog() == true)
             {
