@@ -65,7 +65,7 @@ namespace CardCreator.Services {
           if(item.Hidden==true) tb.Visibility=Visibility.Hidden;
           inner=tb;
         }
-        if(!string.IsNullOrWhiteSpace(item.Name)) inner.Name=item.Name;
+        if(!string.IsNullOrWhiteSpace(item.ControlName)) inner.Name=item.ControlName;
         inner.RenderTransformOrigin=new Point(0.5,0.5);
         ApplyRotation(inner, item.Rotation);
         var container=new Grid{ Background=item.Type=="Image"? (item.Hidden==true?Brushes.Transparent:Brushes.White) : Brushes.Transparent, Width=item.Width, Height=item.Height };

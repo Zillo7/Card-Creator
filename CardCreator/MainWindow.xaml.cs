@@ -17,7 +17,7 @@ namespace CardCreator
     public partial class MainWindow : Window
     {
         public MainViewModel VM => (MainViewModel)DataContext;
-        public MainWindow() { InitializeComponent(); Resources["NullToBoolInverse"] = new NullToBoolInverseConverter(); VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee); }
+        public MainWindow() { Resources["NullToBoolInverse"] = new NullToBoolInverseConverter(); InitializeComponent(); VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee); }
         private void CardCanvas_MouseLeftButtonDown(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftDown(e);
         private void CardCanvas_MouseMove(object s, MouseEventArgs e) => VM.OnCanvasMouseMove(e);
         private void CardCanvas_MouseLeftButtonUp(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftUp(e);
