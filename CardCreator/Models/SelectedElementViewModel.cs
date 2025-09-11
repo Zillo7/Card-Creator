@@ -19,6 +19,52 @@ namespace CardCreator.Models {
     void SetTop(double v){ if(Element!=null){ Canvas.SetTop(Element,v); OnPropertyChanged(nameof(Y)); } }
     public double X { get=>GetLeft(); set=>SetLeft(value); }
     public double Y { get=>GetTop(); set=>SetTop(value); }
+    public double Width {
+      get => Element?.Width ?? double.NaN;
+      set {
+        if (Element != null) {
+          Element.Width = value;
+          if (Element is TextBlock tb) {
+            if (tb.Parent is Grid g) g.Width = value;
+            if (double.IsNaN(value)) FitToText(tb);
+          }
+          OnPropertyChanged();
+          OnPropertyChanged(nameof(WidthInput));
+        }
+      }
+    }
+    public double Height {
+      get => Element?.Height ?? double.NaN;
+      set {
+        if (Element != null) {
+          Element.Height = value;
+          if (Element is TextBlock tb) {
+            if (tb.Parent is Grid g) g.Height = value;
+            if (double.IsNaN(value)) FitToText(tb);
+          }
+          OnPropertyChanged();
+          OnPropertyChanged(nameof(HeightInput));
+        }
+      }
+    }
+    public string WidthInput {
+      get => double.IsNaN(Width) ? "" : Width.ToString();
+      set {
+        if (string.IsNullOrWhiteSpace(value))
+          Width = double.NaN;
+        else if (double.TryParse(value, out var v))
+          Width = v;
+      }
+    }
+    public string HeightInput {
+      get => double.IsNaN(Height) ? "" : Height.ToString();
+      set {
+        if (string.IsNullOrWhiteSpace(value))
+          Height = double.NaN;
+        else if (double.TryParse(value, out var v))
+          Height = v;
+      }
+    }
     public double MaxWidth {
       get => Element?.MaxWidth ?? double.PositiveInfinity;
       set {
@@ -26,7 +72,6 @@ namespace CardCreator.Models {
           Element.MaxWidth = value;
           if (Element is TextBlock tb) { FitToText(tb); }
           OnPropertyChanged();
-          OnPropertyChanged(nameof(MaxWidthInput));
         }
       }
     }
@@ -37,26 +82,7 @@ namespace CardCreator.Models {
           Element.MaxHeight = value;
           if (Element is TextBlock tb) { FitToText(tb); }
           OnPropertyChanged();
-          OnPropertyChanged(nameof(MaxHeightInput));
         }
-      }
-    }
-    public string MaxWidthInput {
-      get => double.IsPositiveInfinity(MaxWidth) ? "" : MaxWidth.ToString();
-      set {
-        if (string.IsNullOrWhiteSpace(value))
-          MaxWidth = double.PositiveInfinity;
-        else if (double.TryParse(value, out var v))
-          MaxWidth = v;
-      }
-    }
-    public string MaxHeightInput {
-      get => double.IsPositiveInfinity(MaxHeight) ? "" : MaxHeight.ToString();
-      set {
-        if (string.IsNullOrWhiteSpace(value))
-          MaxHeight = double.PositiveInfinity;
-        else if (double.TryParse(value, out var v))
-          MaxHeight = v;
       }
     }
     public double Rotation {
