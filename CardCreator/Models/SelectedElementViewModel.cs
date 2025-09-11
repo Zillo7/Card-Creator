@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -102,11 +103,11 @@ namespace CardCreator.Models {
       }
     }
     void FitToText(TextBlock tb){
-      tb.Measure(new Size(tb.MaxWidth, tb.MaxHeight));
-      var size=tb.DesiredSize;
-      tb.Width=size.Width; tb.Height=size.Height;
-      if(tb.Parent is Grid g){ g.Width=size.Width; g.Height=size.Height; }
-    }
+            var ft = new FormattedText(tb.Text ?? "", CultureInfo.CurrentCulture, tb.FlowDirection, new Typeface(tb.FontFamily, tb.FontStyle, tb.FontWeight, tb.FontStretch), tb.FontSize, tb.Foreground, VisualTreeHelper.GetDpi(tb).PixelsPerDip);
+            var w = ft.WidthIncludingTrailingWhitespace; var h = ft.Height;
+            //tb.Width = w; tb.Height = h;
+            if (tb.Parent is Grid g) { g.Width = w; g.Height = h; }
+        }
     public string Text { get=> (Element as TextBlock)?.Text ?? ""; set{ if(Element is TextBlock tb){ tb.Text=value; FitToText(tb); OnPropertyChanged(); } } }
     public double FontSize { get=> (Element as TextBlock)?.FontSize ?? 16; set{ if(Element is TextBlock tb){ tb.FontSize=value; FitToText(tb); OnPropertyChanged(); } } }
     public string FontStyleOption {

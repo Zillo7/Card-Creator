@@ -2,45 +2,72 @@
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  xmlns:sys="clr-namespace:System;assembly=mscorlib"
+ xmlns:local="clr-namespace:CardCreator"
  Title="Card Template Editor (Advanced)" Height="820" Width="1320"
  Background="#FFF9F9FB" KeyDown="Window_KeyDown">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <local:GridSizeToBoolConverter x:Key="GridSizeToBool"/>
+    </Window.Resources>
     <Window.DataContext>
-        <local:MainViewModel xmlns:local="clr-namespace:CardCreator"/>
+        <local:MainViewModel/>
     </Window.DataContext>
     <DockPanel>
-        <ToolBar DockPanel.Dock="Top">
-            <Button Content="Add Text" Command="{Binding AddTextCommand}"/>
-            <Button Content="Add Image" Command="{Binding AddImageCommand}"/>
-            <Separator/>
-            <ToggleButton Content="Snap" IsChecked="{Binding SnapEnabled}"/>
-            <TextBlock Margin="8,0,4,0" VerticalAlignment="Center">Grid:</TextBlock>
-            <ComboBox Width="70" SelectedItem="{Binding GridSize}">
-                <sys:Int32>5</sys:Int32>
-                <sys:Int32>10</sys:Int32>
-                <sys:Int32>20</sys:Int32>
-                <sys:Int32>25</sys:Int32>
-            </ComboBox>
-            <Separator/>
-            <Button Content="Align Left" Command="{Binding AlignLeftCommand}"/>
-            <Button Content="Align Center" Command="{Binding AlignCenterCommand}"/>
-            <Button Content="Align Right" Command="{Binding AlignRightCommand}"/>
-            <Separator/>
-            <Button Content="Align Top" Command="{Binding AlignTopCommand}"/>
-            <Button Content="Align Middle" Command="{Binding AlignMiddleCommand}"/>
-            <Button Content="Align Bottom" Command="{Binding AlignBottomCommand}"/>
-            <Separator/>
-            <Button Content="Distribute H" Command="{Binding DistributeHCommand}"/>
-            <Button Content="Distribute V" Command="{Binding DistributeVCommand}"/>
-            <Separator/>
-            <Button Content="Bring Forward" Command="{Binding BringForwardCommand}"/>
-            <Button Content="Send Backward" Command="{Binding SendBackwardCommand}"/>
-            <Separator/>
-            <Button Content="Save..." Command="{Binding SaveCommand}"/>
-            <Button Content="Load..." Command="{Binding LoadCommand}"/>
-            <Button Content="Export XAML..." Command="{Binding ExportXamlCommand}"/>
-            <Separator/>
-            <TextBlock VerticalAlignment="Center" Opacity=".7">Tip: Ctrl/Shift-click to multi-select. Drag empty space to marquee-select. Arrow keys nudge (Shift=10px).</TextBlock>
-        </ToolBar>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Save..." Command="{Binding SaveCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74E;" FontSize="16"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Load..." Command="{Binding LoadCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8E5;" FontSize="16"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Export XAML..." Command="{Binding ExportXamlCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xEDE1;" FontSize="16"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Insert">
+                <MenuItem Header="Add _Text" Command="{Binding AddTextCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8D2;" FontSize="16"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Add _Image" Command="{Binding AddImageCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8B9;" FontSize="16"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="Align _Left" Command="{Binding AlignLeftCommand}"/>
+                <MenuItem Header="Align _Center" Command="{Binding AlignCenterCommand}"/>
+                <MenuItem Header="Align _Right" Command="{Binding AlignRightCommand}"/>
+                <Separator/>
+                <MenuItem Header="Align _Top" Command="{Binding AlignTopCommand}"/>
+                <MenuItem Header="Align _Middle" Command="{Binding AlignMiddleCommand}"/>
+                <MenuItem Header="Align _Bottom" Command="{Binding AlignBottomCommand}"/>
+                <Separator/>
+                <MenuItem Header="Distribute _Horizontally" Command="{Binding DistributeHCommand}"/>
+                <MenuItem Header="Distribute _Vertically" Command="{Binding DistributeVCommand}"/>
+                <Separator/>
+                <MenuItem Header="_Bring Forward" Command="{Binding BringForwardCommand}"/>
+                <MenuItem Header="_Send Backward" Command="{Binding SendBackwardCommand}"/>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="_Snap" IsCheckable="True" IsChecked="{Binding SnapEnabled}"/>
+                <MenuItem Header="_Grid Size">
+                    <MenuItem Header="5" IsCheckable="True" IsChecked="{Binding GridSize, Converter={StaticResource GridSizeToBool}, ConverterParameter=5}"/>
+                    <MenuItem Header="10" IsCheckable="True" IsChecked="{Binding GridSize, Converter={StaticResource GridSizeToBool}, ConverterParameter=10}"/>
+                    <MenuItem Header="20" IsCheckable="True" IsChecked="{Binding GridSize, Converter={StaticResource GridSizeToBool}, ConverterParameter=20}"/>
+                    <MenuItem Header="25" IsCheckable="True" IsChecked="{Binding GridSize, Converter={StaticResource GridSizeToBool}, ConverterParameter=25}"/>
+                </MenuItem>
+            </MenuItem>
+        </Menu>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
@@ -123,7 +150,14 @@
                             <TextBox Width="200" Text="{Binding ImageSourcePath, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsImage}"/>
                             <Button Content="Browse…" Click="BrowseImage_Click" IsEnabled="{Binding IsImage}" Margin="6,0,0,0"/>
                         </StackPanel>
-                    </Grid>
+                        <StackPanel Margin="0,10,0,0" Visibility="{Binding IsImage, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="Image Source"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Width="200" Text="{Binding ImageSourcePath, UpdateSourceTrigger=PropertyChanged}"/>
+                                <Button Content="Browse…" Click="BrowseImage_Click" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
                     <Separator Margin="0,10,0,10"/>
                     <StackPanel Orientation="Horizontal">
                         <Button Content="Delete Selected" Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding HasSelection}"/>
