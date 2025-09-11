@@ -18,8 +18,8 @@ namespace CardCreator.Models {
     void SetTop(double v){ if(Element!=null){ Canvas.SetTop(Element,v); OnPropertyChanged(nameof(Y)); } }
     public double X { get=>GetLeft(); set=>SetLeft(value); }
     public double Y { get=>GetTop(); set=>SetTop(value); }
-    public double Width { get=> Element?.Width is double d && !double.IsNaN(d)? d : (Element?.ActualWidth??0); set{ if(Element!=null){ Element.Width=value; OnPropertyChanged(); } } }
-    public double Height{ get=> Element?.Height is double d && !double.IsNaN(d)? d : (Element?.ActualHeight??0); set{ if(Element!=null){ Element.Height=value; OnPropertyChanged(); } } }
+    public double MaxWidth { get => Element?.MaxWidth ?? double.PositiveInfinity; set { if (Element != null) { Element.MaxWidth = value; if (Element is TextBlock tb) { FitToText(tb); } OnPropertyChanged(); } } }
+    public double MaxHeight { get => Element?.MaxHeight ?? double.PositiveInfinity; set { if (Element != null) { Element.MaxHeight = value; if (Element is TextBlock tb) { FitToText(tb); } OnPropertyChanged(); } } }
     public double Rotation {
       get{
         if(Element?.RenderTransform is TransformGroup tg)
@@ -38,14 +38,51 @@ namespace CardCreator.Models {
       }
     }
     void FitToText(TextBlock tb){
-      tb.Measure(new Size(double.PositiveInfinity,double.PositiveInfinity));
+      tb.Measure(new Size(tb.MaxWidth, tb.MaxHeight));
       var size=tb.DesiredSize;
       tb.Width=size.Width; tb.Height=size.Height;
       if(tb.Parent is Grid g){ g.Width=size.Width; g.Height=size.Height; }
     }
     public string Text { get=> (Element as TextBlock)?.Text ?? ""; set{ if(Element is TextBlock tb){ tb.Text=value; FitToText(tb); OnPropertyChanged(); } } }
     public double FontSize { get=> (Element as TextBlock)?.FontSize ?? 16; set{ if(Element is TextBlock tb){ tb.FontSize=value; FitToText(tb); OnPropertyChanged(); } } }
-    public bool Bold { get=> (Element as TextBlock)?.FontWeight==FontWeights.Bold; set{ if(Element is TextBlock tb){ tb.FontWeight=value? FontWeights.Bold:FontWeights.Normal; FitToText(tb); OnPropertyChanged(); } } }
+    public string FontStyleOption {
+      get {
+        if (Element is TextBlock tb) {
+          bool bold = tb.FontWeight == FontWeights.Bold;
+          bool italic = tb.FontStyle == FontStyles.Italic;
+          if (bold && italic) return "Bold Italic";
+          if (bold) return "Bold";
+          if (italic) return "Italic";
+          return "None";
+        }
+        return "None";
+      }
+      set {
+        if (Element is TextBlock tb) {
+          switch (value) {
+            case "Italic":
+              tb.FontStyle = FontStyles.Italic;
+              tb.FontWeight = FontWeights.Normal;
+              break;
+            case "Bold":
+              tb.FontStyle = FontStyles.Normal;
+              tb.FontWeight = FontWeights.Bold;
+              break;
+            case "Bold Italic":
+              tb.FontStyle = FontStyles.Italic;
+              tb.FontWeight = FontWeights.Bold;
+              break;
+            default:
+              tb.FontStyle = FontStyles.Normal;
+              tb.FontWeight = FontWeights.Normal;
+              break;
+          }
+          FitToText(tb);
+          OnPropertyChanged();
+        }
+      }
+    }
+    public TextAlignment TextAlignment { get => (Element as TextBlock)?.TextAlignment ?? TextAlignment.Left; set { if (Element is TextBlock tb) { tb.TextAlignment = value; OnPropertyChanged(); } } }
     public string ForegroundHex {
       get{
         if(Element is TextBlock tb && tb.Foreground is SolidColorBrush scb) return $"#{scb.Color.R:X2}{scb.Color.G:X2}{scb.Color.B:X2}";
