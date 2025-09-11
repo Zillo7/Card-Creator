@@ -112,17 +112,14 @@ namespace CardCreator
             Inspector.PropertyChanged += OnInspectorPropertyChanged;
         }
 
-        private bool ConfigureSheet()
-        {
+        private void ConfigureSheet()
             var dlg = new SheetDialog(_sheetColumns, _sheetRows, _useJpeg) { Owner = Application.Current.MainWindow };
             if (dlg.ShowDialog() == true)
             {
                 _sheetColumns = dlg.Columns;
                 _sheetRows = dlg.Rows;
                 _useJpeg = dlg.UseJpeg;
-                return true;
             }
-            return false;
         }
 
         public void AttachCanvas(Canvas canvas, Line guideH, Line guideV, Rectangle marquee) { _canvas = canvas; _guideH = guideH; _guideV = guideV; _marquee = marquee; }
@@ -339,7 +336,6 @@ namespace CardCreator
         private void SaveImages()
         {
             if (_canvas == null || Cards.Count == 0) return;
-            if (!ConfigureSheet()) return;
             var folderDlg = new WinForms.FolderBrowserDialog();
             if (folderDlg.ShowDialog() != WinForms.DialogResult.OK) return;
             string dir = folderDlg.SelectedPath;
@@ -364,7 +360,6 @@ namespace CardCreator
         private void SaveSheets()
         {
             if (_canvas == null || Cards.Count == 0) return;
-            if (!ConfigureSheet()) return;
             var fileDlg = new SaveFileDialog { Filter = _useJpeg ? "JPEG Image|*.jpg;*.jpeg" : "PNG Image|*.png", FileName = "Sheet", DefaultExt = _useJpeg ? ".jpg" : ".png" };
             if (fileDlg.ShowDialog() != true) return;
             int perSheet = _sheetColumns * _sheetRows;
