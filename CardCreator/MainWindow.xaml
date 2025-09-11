@@ -1,0 +1,126 @@
+<Window x:Class="CardCreator.MainWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:sys="clr-namespace:System;assembly=mscorlib"
+ Title="Card Template Editor (Advanced)" Height="820" Width="1320"
+ Background="#FFF9F9FB" KeyDown="Window_KeyDown">
+    <Window.DataContext>
+        <local:MainViewModel xmlns:local="clr-namespace:CardCreator"/>
+    </Window.DataContext>
+    <DockPanel>
+        <ToolBar DockPanel.Dock="Top">
+            <Button Content="Add Text" Command="{Binding AddTextCommand}"/>
+            <Button Content="Add Image" Command="{Binding AddImageCommand}"/>
+            <Separator/>
+            <ToggleButton Content="Snap" IsChecked="{Binding SnapEnabled}"/>
+            <TextBlock Margin="8,0,4,0" VerticalAlignment="Center">Grid:</TextBlock>
+            <ComboBox Width="70" SelectedItem="{Binding GridSize}">
+                <sys:Int32>5</sys:Int32>
+                <sys:Int32>10</sys:Int32>
+                <sys:Int32>20</sys:Int32>
+                <sys:Int32>25</sys:Int32>
+            </ComboBox>
+            <Separator/>
+            <Button Content="Align Left" Command="{Binding AlignLeftCommand}"/>
+            <Button Content="Align Center" Command="{Binding AlignCenterCommand}"/>
+            <Button Content="Align Right" Command="{Binding AlignRightCommand}"/>
+            <Separator/>
+            <Button Content="Align Top" Command="{Binding AlignTopCommand}"/>
+            <Button Content="Align Middle" Command="{Binding AlignMiddleCommand}"/>
+            <Button Content="Align Bottom" Command="{Binding AlignBottomCommand}"/>
+            <Separator/>
+            <Button Content="Distribute H" Command="{Binding DistributeHCommand}"/>
+            <Button Content="Distribute V" Command="{Binding DistributeVCommand}"/>
+            <Separator/>
+            <Button Content="Bring Forward" Command="{Binding BringForwardCommand}"/>
+            <Button Content="Send Backward" Command="{Binding SendBackwardCommand}"/>
+            <Separator/>
+            <Button Content="Save..." Command="{Binding SaveCommand}"/>
+            <Button Content="Load..." Command="{Binding LoadCommand}"/>
+            <Button Content="Export XAML..." Command="{Binding ExportXamlCommand}"/>
+            <Separator/>
+            <TextBlock VerticalAlignment="Center" Opacity=".7">Tip: Ctrl/Shift-click to multi-select. Drag empty space to marquee-select. Arrow keys nudge (Shift=10px).</TextBlock>
+        </ToolBar>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="360"/>
+            </Grid.ColumnDefinitions>
+            <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="#FFEFF1F4">
+                <Grid Margin="20">
+                    <Border Width="750" Height="1050" CornerRadius="24" BorderBrush="#FFCCD1D8" BorderThickness="2" Background="{StaticResource CheckerBrush}">
+                        <Canvas x:Name="CardCanvas" Background="Transparent" Focusable="True"
+              MouseLeftButtonDown="CardCanvas_MouseLeftButtonDown"
+              MouseMove="CardCanvas_MouseMove"
+              MouseLeftButtonUp="CardCanvas_MouseLeftButtonUp">
+                            <Line x:Name="GuideH" Stroke="#660078D7" StrokeThickness="1.5" Visibility="Collapsed"/>
+                            <Line x:Name="GuideV" Stroke="#660078D7" StrokeThickness="1.5" Visibility="Collapsed"/>
+                            <Rectangle x:Name="Marquee" Stroke="#770078D7" StrokeDashArray="3,2" Fill="#220078D7" Visibility="Collapsed"/>
+                        </Canvas>
+                    </Border>
+                </Grid>
+            </ScrollViewer>
+            <Border Grid.Column="1" Margin="12,0,0,0" Padding="12" Background="White" BorderBrush="#FFCCD1D8" BorderThickness="1" CornerRadius="12">
+                <StackPanel>
+                    <TextBlock Text="Inspector" FontSize="18" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <ItemsControl ItemsSource="{Binding SelectedItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Grid DataContext="{Binding Inspector}" Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="110"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Type" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding ElementType, Mode=OneWay}" Grid.Row="0" Grid.Column="1" IsReadOnly="True"/>
+                        <TextBlock Text="X" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding X, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="1" Grid.Column="1"/>
+                        <TextBlock Text="Y" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Y, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="2" Grid.Column="1"/>
+                        <TextBlock Text="Width" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Width, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="3" Grid.Column="1"/>
+                        <TextBlock Text="Height" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Height, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="4" Grid.Column="1"/>
+                        <TextBlock Text="Rotation" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Rotation, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="5" Grid.Column="1"/>
+                        <TextBlock Text="Text" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" Grid.Row="6" Grid.Column="1" IsEnabled="{Binding IsText}"/>
+                        <TextBlock Text="Font Size" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="7" Grid.Column="1" IsEnabled="{Binding IsText}"/>
+                        <TextBlock Text="Bold" Grid.Row="8" Grid.Column="0" VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding Bold, UpdateSourceTrigger=PropertyChanged}" Grid.Row="8" Grid.Column="1" IsEnabled="{Binding IsText}"/>
+                        <TextBlock Text="Color (#RRGGBB)" Grid.Row="9" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding ForegroundHex, UpdateSourceTrigger=PropertyChanged}" Grid.Row="9" Grid.Column="1" IsEnabled="{Binding IsText}"/>
+                        <TextBlock Text="Image Source" Grid.Row="10" Grid.Column="0" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" Grid.Row="10" Grid.Column="1">
+                            <TextBox Width="200" Text="{Binding ImageSourcePath, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsImage}"/>
+                            <Button Content="Browse…" Click="BrowseImage_Click" IsEnabled="{Binding IsImage}" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                    <Separator Margin="0,10,0,10"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Delete Selected" Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding HasSelection}"/>
+                        <CheckBox Content="Show Guidelines" IsChecked="{Binding GuidelinesEnabled}" Margin="10,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

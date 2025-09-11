@@ -1,0 +1,61 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\brian\\source\\repos\\Card-Creator\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{F4790CC6-039E-4CAA-B987-7A2207519900}|CardCreator\\CardCreator.csproj|c:\\users\\brian\\source\\repos\\card-creator\\cardcreator\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F4790CC6-039E-4CAA-B987-7A2207519900}|CardCreator\\CardCreator.csproj|solutionrelative:cardcreator\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4790CC6-039E-4CAA-B987-7A2207519900}|CardCreator\\CardCreator.csproj|c:\\users\\brian\\source\\repos\\card-creator\\cardcreator\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{F4790CC6-039E-4CAA-B987-7A2207519900}|CardCreator\\CardCreator.csproj|solutionrelative:cardcreator\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:2:0:{57d563b6-44a5-47df-85be-f4199ad6b651}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "CardCreator\\MainWindow.xaml",
+              "ToolTip": "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\MainWindow.xaml",
+              "RelativeToolTip": "CardCreator\\MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-09-10T23:48:47.239Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "CardCreator\\MainWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\MainWindow.xaml.cs",
+              "RelativeToolTip": "CardCreator\\MainWindow.xaml.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAADgvw8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-10T23:48:46.693Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
