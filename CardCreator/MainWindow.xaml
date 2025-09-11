@@ -93,9 +93,9 @@
                         <TextBlock Text="Y" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
                         <TextBox Text="{Binding Y, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="1" Grid.Column="1"/>
                         <TextBlock Text="Max Width" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding MaxWidth, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="2" Grid.Column="1"/>
+                        <TextBox Text="{Binding MaxWidthInput, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="1"/>
                         <TextBlock Text="Max Height" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding MaxHeight, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="3" Grid.Column="1"/>
+                        <TextBox Text="{Binding MaxHeightInput, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="1"/>
                         <TextBlock Text="Rotation" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
                         <TextBox Text="{Binding Rotation, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="4" Grid.Column="1"/>
                         <TextBlock Text="Text" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>

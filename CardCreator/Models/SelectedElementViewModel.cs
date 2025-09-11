@@ -18,8 +18,46 @@ namespace CardCreator.Models {
     void SetTop(double v){ if(Element!=null){ Canvas.SetTop(Element,v); OnPropertyChanged(nameof(Y)); } }
     public double X { get=>GetLeft(); set=>SetLeft(value); }
     public double Y { get=>GetTop(); set=>SetTop(value); }
-    public double MaxWidth { get => Element?.MaxWidth ?? double.PositiveInfinity; set { if (Element != null) { Element.MaxWidth = value; if (Element is TextBlock tb) { FitToText(tb); } OnPropertyChanged(); } } }
-    public double MaxHeight { get => Element?.MaxHeight ?? double.PositiveInfinity; set { if (Element != null) { Element.MaxHeight = value; if (Element is TextBlock tb) { FitToText(tb); } OnPropertyChanged(); } } }
+    public double MaxWidth {
+      get => Element?.MaxWidth ?? double.PositiveInfinity;
+      set {
+        if (Element != null) {
+          Element.MaxWidth = value;
+          if (Element is TextBlock tb) { FitToText(tb); }
+          OnPropertyChanged();
+          OnPropertyChanged(nameof(MaxWidthInput));
+        }
+      }
+    }
+    public double MaxHeight {
+      get => Element?.MaxHeight ?? double.PositiveInfinity;
+      set {
+        if (Element != null) {
+          Element.MaxHeight = value;
+          if (Element is TextBlock tb) { FitToText(tb); }
+          OnPropertyChanged();
+          OnPropertyChanged(nameof(MaxHeightInput));
+        }
+      }
+    }
+    public string MaxWidthInput {
+      get => double.IsPositiveInfinity(MaxWidth) ? "" : MaxWidth.ToString();
+      set {
+        if (string.IsNullOrWhiteSpace(value))
+          MaxWidth = double.PositiveInfinity;
+        else if (double.TryParse(value, out var v))
+          MaxWidth = v;
+      }
+    }
+    public string MaxHeightInput {
+      get => double.IsPositiveInfinity(MaxHeight) ? "" : MaxHeight.ToString();
+      set {
+        if (string.IsNullOrWhiteSpace(value))
+          MaxHeight = double.PositiveInfinity;
+        else if (double.TryParse(value, out var v))
+          MaxHeight = v;
+      }
+    }
     public double Rotation {
       get{
         if(Element?.RenderTransform is TransformGroup tg)
