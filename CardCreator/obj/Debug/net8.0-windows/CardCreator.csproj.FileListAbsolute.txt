@@ -42,3 +42,4 @@ C:\Users\brian\source\repos\Card-Creator\CardCreator\obj\Debug\net8.0-windows\re
 C:\Users\brian\source\repos\Card-Creator\CardCreator\obj\Debug\net8.0-windows\CardCreator.pdb
 C:\Users\brian\source\repos\Card-Creator\CardCreator\obj\Debug\net8.0-windows\CardCreator.genruntimeconfig.cache
 C:\Users\brian\source\repos\Card-Creator\CardCreator\obj\Debug\net8.0-windows\ref\CardCreator.dll
+C:\Users\brian\source\repos\Card-Creator\CardCreator\obj\Debug\net8.0-windows\CardCreator.sourcelink.json
