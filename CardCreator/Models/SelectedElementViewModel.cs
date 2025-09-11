@@ -37,9 +37,15 @@ namespace CardCreator.Models {
         OnPropertyChanged();
       }
     }
-    public string Text { get=> (Element as TextBlock)?.Text ?? ""; set{ if(Element is TextBlock tb){ tb.Text=value; OnPropertyChanged(); } } }
-    public double FontSize { get=> (Element as TextBlock)?.FontSize ?? 16; set{ if(Element is TextBlock tb){ tb.FontSize=value; OnPropertyChanged(); } } }
-    public bool Bold { get=> (Element as TextBlock)?.FontWeight==FontWeights.Bold; set{ if(Element is TextBlock tb){ tb.FontWeight=value? FontWeights.Bold:FontWeights.Normal; OnPropertyChanged(); } } }
+    void FitToText(TextBlock tb){
+      tb.Measure(new Size(double.PositiveInfinity,double.PositiveInfinity));
+      var size=tb.DesiredSize;
+      tb.Width=size.Width; tb.Height=size.Height;
+      if(tb.Parent is Grid g){ g.Width=size.Width; g.Height=size.Height; }
+    }
+    public string Text { get=> (Element as TextBlock)?.Text ?? ""; set{ if(Element is TextBlock tb){ tb.Text=value; FitToText(tb); OnPropertyChanged(); } } }
+    public double FontSize { get=> (Element as TextBlock)?.FontSize ?? 16; set{ if(Element is TextBlock tb){ tb.FontSize=value; FitToText(tb); OnPropertyChanged(); } } }
+    public bool Bold { get=> (Element as TextBlock)?.FontWeight==FontWeights.Bold; set{ if(Element is TextBlock tb){ tb.FontWeight=value? FontWeights.Bold:FontWeights.Normal; FitToText(tb); OnPropertyChanged(); } } }
     public string ForegroundHex {
       get{
         if(Element is TextBlock tb && tb.Foreground is SolidColorBrush scb) return $"#{scb.Color.R:X2}{scb.Color.G:X2}{scb.Color.B:X2}";
