@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -95,6 +96,12 @@ namespace CardCreator
             var container = FindAncestor<Grid>(e.OriginalSource as DependencyObject);
             if (container != null && _canvas.Children.Contains(container))
             {
+                if (e.OriginalSource is Thumb)
+                {
+                    if (IsAdditiveSelect()) ToggleSelection(container);
+                    else if (!_selected.Contains(container)) { ClearSelection(); _selected.Add(container); UpdateSelectionVisuals(); }
+                    return;
+                }
                 if (IsAdditiveSelect()) ToggleSelection(container);
                 else { if (!_selected.Contains(container)) { ClearSelection(); _selected.Add(container); UpdateSelectionVisuals(); } }
                 _draggingContainer = container; _dragStart = pos; _dragOffset = new Vector(Canvas.GetLeft(container), Canvas.GetTop(container));
@@ -161,6 +168,7 @@ namespace CardCreator
             if (_canvas == null) return;
             var tb = new TextBlock { Text = "Text", FontSize = 28, Foreground = Brushes.Black, RenderTransformOrigin = new Point(0.5, 0.5), TextWrapping = TextWrapping.Wrap };
             var container = CreateContainer(tb, 60, 60, 180, 60);
+            tb.Width = 180; tb.Height = 60;
             tb.HorizontalAlignment = HorizontalAlignment.Stretch; tb.VerticalAlignment = VerticalAlignment.Stretch;
             _canvas.Children.Add(container); SelectSingle(container);
         }
@@ -169,6 +177,7 @@ namespace CardCreator
             if (_canvas == null) return;
             var img = new Image { Stretch = Stretch.Uniform, RenderTransformOrigin = new Point(0.5, 0.5) };
             var container = CreateContainer(img, 100, 100, 200, 140);
+            img.Width = 200; img.Height = 140;
             container.Background = Brushes.White;
             _canvas.Children.Add(container); SelectSingle(container);
         }
@@ -179,8 +188,74 @@ namespace CardCreator
             container.Children.Add(inner);
             var selBorder = new Border { BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)), BorderThickness = new Thickness(2), CornerRadius = new CornerRadius(4), Margin = new Thickness(-2), IsHitTestVisible = false, Visibility = Visibility.Collapsed };
             container.Children.Add(selBorder);
+
+            Thumb MakeThumb(Cursor cursor, HorizontalAlignment hAlign, VerticalAlignment vAlign, int xDir, int yDir)
+            {
+                var t = new Thumb
+                {
+                    Width = 10,
+                    Height = 10,
+                    Background = Brushes.White,
+                    BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
+                    BorderThickness = new Thickness(1),
+                    HorizontalAlignment = hAlign,
+                    VerticalAlignment = vAlign,
+                    Margin = new Thickness(-5),
+                    Cursor = cursor,
+                    Visibility = Visibility.Collapsed
+                };
+                t.DragDelta += (s, e) => ResizeFromCorner(container, e, xDir, yDir);
+                return t;
+            }
+
+            container.Children.Add(MakeThumb(Cursors.SizeNWSE, HorizontalAlignment.Left, VerticalAlignment.Top, -1, -1));
+            container.Children.Add(MakeThumb(Cursors.SizeNESW, HorizontalAlignment.Right, VerticalAlignment.Top, 1, -1));
+            container.Children.Add(MakeThumb(Cursors.SizeNESW, HorizontalAlignment.Left, VerticalAlignment.Bottom, -1, 1));
+            container.Children.Add(MakeThumb(Cursors.SizeNWSE, HorizontalAlignment.Right, VerticalAlignment.Bottom, 1, 1));
             Canvas.SetLeft(container, SnapEnabled ? Snap(x) : x); Canvas.SetTop(container, SnapEnabled ? Snap(y) : y);
             return container;
+        }
+
+        private void ResizeFromCorner(Grid container, DragDeltaEventArgs e, int xDir, int yDir)
+        {
+            if (_canvas == null) return;
+            double left = Canvas.GetLeft(container);
+            double top = Canvas.GetTop(container);
+            double width = container.Width;
+            double height = container.Height;
+            double dx = e.HorizontalChange;
+            double dy = e.VerticalChange;
+
+            if (xDir < 0) { left += dx; width -= dx; }
+            else { width += dx; }
+            if (yDir < 0) { top += dy; height -= dy; }
+            else { height += dy; }
+
+            if (width < 10) { if (xDir < 0) left += width - 10; width = 10; }
+            if (height < 10) { if (yDir < 0) top += height - 10; height = 10; }
+
+            if (SnapEnabled)
+            {
+                left = Snap(left);
+                top = Snap(top);
+                width = Snap(width);
+                height = Snap(height);
+            }
+
+            Canvas.SetLeft(container, Math.Max(0, left));
+            Canvas.SetTop(container, Math.Max(0, top));
+            container.Width = width;
+            container.Height = height;
+            if (container.Children[0] is FrameworkElement fe)
+            {
+                fe.Width = width;
+                fe.Height = height;
+            }
+            if (_selected.Count == 1 && _selected[0] == container)
+            {
+                Inspector.SetElement((FrameworkElement)container.Children[0]);
+                Inspector.RefreshPosition();
+            }
         }
 
         private void SelectSingle(Grid c) { ClearSelection(); _selected.Add(c); UpdateSelectionVisuals(); UpdateInspector(); }
@@ -199,7 +274,10 @@ namespace CardCreator
             if (_canvas == null) return;
             foreach (var child in _canvas.Children.OfType<Grid>())
             {
-                if (child.Children.Count >= 2 && child.Children[1] is Border b) b.Visibility = _selected.Contains(child) ? Visibility.Visible : Visibility.Collapsed;
+                bool sel = _selected.Contains(child);
+                if (child.Children.Count >= 2 && child.Children[1] is Border b) b.Visibility = sel ? Visibility.Visible : Visibility.Collapsed;
+                for (int i = 2; i < child.Children.Count; i++)
+                    if (child.Children[i] is Thumb t) t.Visibility = sel ? Visibility.Visible : Visibility.Collapsed;
             }
             OnPropertyChanged(nameof(SelectedItems)); OnPropertyChanged(nameof(HasSelection));
             AlignLeftCommand.RaiseCanExecuteChanged(); AlignCenterCommand.RaiseCanExecuteChanged(); AlignRightCommand.RaiseCanExecuteChanged();
