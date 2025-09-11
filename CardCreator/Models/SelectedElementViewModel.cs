@@ -40,7 +40,7 @@ namespace CardCreator.Models {
           Element.Width = value;
           if (Element is TextBlock tb) {
             if (tb.Parent is Grid g) g.Width = value;
-            if (double.IsNaN(value)) FitToText(tb);
+            //if (double.IsNaN(value)) FitToText(tb);
           }
           OnPropertyChanged();
           OnPropertyChanged(nameof(WidthInput));
@@ -54,7 +54,7 @@ namespace CardCreator.Models {
           Element.Height = value;
           if (Element is TextBlock tb) {
             if (tb.Parent is Grid g) g.Height = value;
-            if (double.IsNaN(value)) FitToText(tb);
+            //if (double.IsNaN(value)) FitToText(tb);
           }
           OnPropertyChanged();
           OnPropertyChanged(nameof(HeightInput));
@@ -84,7 +84,7 @@ namespace CardCreator.Models {
       set {
         if (Element != null) {
           Element.MaxWidth = value;
-          if (Element is TextBlock tb) { FitToText(tb); }
+          //if (Element is TextBlock tb) { FitToText(tb); }
           OnPropertyChanged();
         }
       }
@@ -94,7 +94,7 @@ namespace CardCreator.Models {
       set {
         if (Element != null) {
           Element.MaxHeight = value;
-          if (Element is TextBlock tb) { FitToText(tb); }
+          //if (Element is TextBlock tb) { FitToText(tb); }
           OnPropertyChanged();
         }
       }
@@ -122,13 +122,13 @@ namespace CardCreator.Models {
             //tb.Width = w; tb.Height = h;
             if (tb.Parent is Grid g) { g.Width = w; g.Height = h; }
         }
-    public string Text { get=> (Element as TextBlock)?.Text ?? ""; set{ if(Element is TextBlock tb){ tb.Text=value; FitToText(tb); OnPropertyChanged(); } } }
-    public double FontSize { get=> (Element as TextBlock)?.FontSize ?? 16; set{ if(Element is TextBlock tb){ tb.FontSize=value; FitToText(tb); OnPropertyChanged(); } } }
+    public string Text { get=> (Element as TextBlock)?.Text ?? ""; set{ if(Element is TextBlock tb){ tb.Text=value; OnPropertyChanged(); } } }
+    public double FontSize { get=> (Element as TextBlock)?.FontSize ?? 16; set{ if(Element is TextBlock tb){ tb.FontSize=value; OnPropertyChanged(); } } }
 
     public IEnumerable<FontFamily> FontFamilies { get; } = Fonts.SystemFontFamilies.OrderBy(f => f.Source);
     public FontFamily FontFamily {
       get => (Element as TextBlock)?.FontFamily ?? Fonts.SystemFontFamilies.First();
-      set { if (Element is TextBlock tb) { tb.FontFamily = value; FitToText(tb); OnPropertyChanged(); } }
+      set { if (Element is TextBlock tb) { tb.FontFamily = value; OnPropertyChanged(); } }
     }
 
     public string FontStyleOption {
@@ -163,7 +163,7 @@ namespace CardCreator.Models {
               tb.FontWeight = FontWeights.Normal;
               break;
           }
-          FitToText(tb);
+          //FitToText(tb);
           OnPropertyChanged();
         }
       }
