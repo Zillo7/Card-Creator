@@ -33,7 +33,6 @@ namespace CardCreator
 
         public RelayCommand AddTextCommand { get; }
         public RelayCommand AddImageCommand { get; }
-        public RelayCommand DeleteSelectedCommand { get; }
         public RelayCommand SaveCommand { get; }
         public RelayCommand LoadCommand { get; }
         public RelayCommand ExportXamlCommand { get; }
@@ -65,7 +64,6 @@ namespace CardCreator
         {
             AddTextCommand = new RelayCommand(_ => AddText());
             AddImageCommand = new RelayCommand(_ => AddImage());
-            DeleteSelectedCommand = new RelayCommand(_ => DeleteSelected(), _ => HasSelection);
             SaveCommand = new RelayCommand(_ => Save());
             LoadCommand = new RelayCommand(_ => Load());
             ExportXamlCommand = new RelayCommand(_ => ExportXaml());
@@ -115,6 +113,8 @@ namespace CardCreator
                 if (SnapEnabled) { nx = Snap(nx); ny = Snap(ny); }
                 Canvas.SetLeft(_draggingContainer, Math.Max(0, nx)); Canvas.SetTop(_draggingContainer, Math.Max(0, ny));
                 if (GuidelinesEnabled) UpdateGuidelines(_draggingContainer);
+                if (_selected.Count == 1 && _selected[0] == _draggingContainer)
+                    Inspector.RefreshPosition();
             }
         }
 
@@ -129,6 +129,12 @@ namespace CardCreator
         public void OnKeyDown(KeyEventArgs e)
         {
             if (_canvas == null || _selected.Count == 0) return;
+            if (e.Key == Key.Delete)
+            {
+                DeleteSelected();
+                e.Handled = true;
+                return;
+            }
             int step = (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) ? 10 : 1;
             bool handled = false;
             foreach (var c in _selected)
@@ -183,7 +189,6 @@ namespace CardCreator
         {
             _selected.Clear(); UpdateSelectionVisuals(); Inspector.SetElement(null);
             OnPropertyChanged(nameof(HasSelection));
-            DeleteSelectedCommand.RaiseCanExecuteChanged();
             AlignLeftCommand.RaiseCanExecuteChanged(); AlignCenterCommand.RaiseCanExecuteChanged(); AlignRightCommand.RaiseCanExecuteChanged();
             AlignTopCommand.RaiseCanExecuteChanged(); AlignMiddleCommand.RaiseCanExecuteChanged(); AlignBottomCommand.RaiseCanExecuteChanged();
             DistributeHCommand.RaiseCanExecuteChanged(); DistributeVCommand.RaiseCanExecuteChanged();
@@ -197,7 +202,6 @@ namespace CardCreator
                 if (child.Children.Count >= 2 && child.Children[1] is Border b) b.Visibility = _selected.Contains(child) ? Visibility.Visible : Visibility.Collapsed;
             }
             OnPropertyChanged(nameof(SelectedItems)); OnPropertyChanged(nameof(HasSelection));
-            DeleteSelectedCommand.RaiseCanExecuteChanged();
             AlignLeftCommand.RaiseCanExecuteChanged(); AlignCenterCommand.RaiseCanExecuteChanged(); AlignRightCommand.RaiseCanExecuteChanged();
             AlignTopCommand.RaiseCanExecuteChanged(); AlignMiddleCommand.RaiseCanExecuteChanged(); AlignBottomCommand.RaiseCanExecuteChanged();
             DistributeHCommand.RaiseCanExecuteChanged(); DistributeVCommand.RaiseCanExecuteChanged();

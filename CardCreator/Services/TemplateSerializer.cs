@@ -22,7 +22,8 @@ namespace CardCreator.Services {
         var inner=(FrameworkElement)g.Children[0];
         var item=new TemplateItem{
           X=Canvas.GetLeft(g), Y=Canvas.GetTop(g), Width=g.Width, Height=g.Height, Rotation=GetRotation(inner), Z=z++,
-          Hidden=inner.Visibility!=Visibility.Visible
+          Hidden=inner.Visibility!=Visibility.Visible,
+          Name=string.IsNullOrWhiteSpace(inner.Name)?null:inner.Name
         };
         if(inner is TextBlock tb){
           item.Type="Text"; item.Text=tb.Text; item.FontSize=tb.FontSize; item.Bold=tb.FontWeight==FontWeights.Bold;
@@ -64,6 +65,7 @@ namespace CardCreator.Services {
           if(item.Hidden==true) tb.Visibility=Visibility.Hidden;
           inner=tb;
         }
+        if(!string.IsNullOrWhiteSpace(item.Name)) inner.Name=item.Name;
         inner.RenderTransformOrigin=new Point(0.5,0.5);
         ApplyRotation(inner, item.Rotation);
         var container=new Grid{ Background=item.Type=="Image"? (item.Hidden==true?Brushes.Transparent:Brushes.White) : Brushes.Transparent, Width=item.Width, Height=item.Height };
@@ -81,6 +83,8 @@ namespace CardCreator.Services {
         if(obj is not Grid g || g.Children.Count==0) continue;
         var inner=(FrameworkElement)g.Children[0];
         double x=Canvas.GetLeft(g), y=Canvas.GetTop(g);
+        string nameAttr="";
+        if(!string.IsNullOrWhiteSpace(inner.Name)) nameAttr=" Name=\""+XmlEscape(inner.Name)+"\"";
         if(inner is TextBlock tb){
           string color="#000000";
           if(tb.Foreground is SolidColorBrush scb) color=$"#{scb.Color.R:X2}{scb.Color.G:X2}{scb.Color.B:X2}";
@@ -91,7 +95,7 @@ namespace CardCreator.Services {
             " FontStyle=\""+(tb.FontStyle==FontStyles.Italic?"Italic":"Normal")+"\""+
             " TextAlignment=\""+tb.TextAlignment+"\""+
             " Foreground=\""+color+"\""+
-            " Width=\""+g.Width+"\" Height=\""+g.Height+"\" Canvas.Left=\""+x+"\" Canvas.Top=\""+y+"\"";
+            " Width=\""+g.Width+"\" Height=\""+g.Height+"\" Canvas.Left=\""+x+"\" Canvas.Top=\""+y+"\""+nameAttr;
           if(tb.Visibility!=Visibility.Visible) attrs+=" Visibility=\""+tb.Visibility+"\"";
           sb.AppendLine("  <TextBlock"+attrs+">");
           var angle=GetRotation(inner);
@@ -100,7 +104,7 @@ namespace CardCreator.Services {
         } else if(inner is Image img){
           string srcAttr="";
           if(img.Source is BitmapImage bi && bi.UriSource!=null) srcAttr=" Source=\""+XmlEscape(bi.UriSource.ToString())+"\"";
-          var attrs=srcAttr+" Stretch=\""+img.Stretch+"\" Width=\""+g.Width+"\" Height=\""+g.Height+"\" Canvas.Left=\""+x+"\" Canvas.Top=\""+y+"\"";
+          var attrs=srcAttr+" Stretch=\""+img.Stretch+"\" Width=\""+g.Width+"\" Height=\""+g.Height+"\" Canvas.Left=\""+x+"\" Canvas.Top=\""+y+"\""+nameAttr;
           if(img.Visibility!=Visibility.Visible) attrs+=" Visibility=\""+img.Visibility+"\"";
           sb.AppendLine("  <Image"+attrs+">");
           var angle=GetRotation(inner);

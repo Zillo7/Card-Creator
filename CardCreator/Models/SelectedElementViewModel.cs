@@ -11,14 +11,25 @@ using System.Windows.Media;
 namespace CardCreator.Models {
   public class SelectedElementViewModel : INotifyPropertyChanged {
     public FrameworkElement? Element {get; private set;}
+    public FrameworkElement? Container {get; private set;}
     public string? ElementType {get; private set;}
     public bool IsText => Element is TextBlock;
     public bool IsImage => Element is Image;
-    public void SetElement(FrameworkElement? element){ Element=element; ElementType=element?.GetType().Name; OnPropertyChanged(string.Empty); }
-    double GetLeft()=> Element!=null? Canvas.GetLeft(Element):0;
-    void SetLeft(double v){ if(Element!=null){ Canvas.SetLeft(Element,v); OnPropertyChanged(nameof(X)); } }
-    double GetTop()=> Element!=null? Canvas.GetTop(Element):0;
-    void SetTop(double v){ if(Element!=null){ Canvas.SetTop(Element,v); OnPropertyChanged(nameof(Y)); } }
+    public void SetElement(FrameworkElement? element){ Element=element; Container=element?.Parent as FrameworkElement; ElementType=element?.GetType().Name; OnPropertyChanged(string.Empty); }
+    public string Name {
+      get => Element?.Name ?? "";
+      set {
+        if (Element != null) {
+          Element.Name = value;
+          OnPropertyChanged();
+        }
+      }
+    }
+    double GetLeft()=> Container!=null? Canvas.GetLeft(Container):0;
+    void SetLeft(double v){ if(Container!=null){ Canvas.SetLeft(Container,v); OnPropertyChanged(nameof(X)); } }
+    double GetTop()=> Container!=null? Canvas.GetTop(Container):0;
+    void SetTop(double v){ if(Container!=null){ Canvas.SetTop(Container,v); OnPropertyChanged(nameof(Y)); } }
+    public void RefreshPosition(){ OnPropertyChanged(nameof(X)); OnPropertyChanged(nameof(Y)); }
     public double X { get=>GetLeft(); set=>SetLeft(value); }
     public double Y { get=>GetTop(); set=>SetTop(value); }
     public double Width {
