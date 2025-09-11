@@ -157,7 +157,7 @@
                                 <Button Content="Browse…" Click="BrowseImage_Click" Margin="6,0,0,0"/>
                             </StackPanel>
                         </StackPanel>
-                    </StackPanel>
+                    </Grid>
                     <Separator Margin="0,10,0,10"/>
                     <StackPanel Orientation="Horizontal">
                         <Button Content="Delete Selected" Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding HasSelection}"/>
