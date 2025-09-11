@@ -3,6 +3,8 @@ namespace CardCreator.Models {
   public class TemplateModel {
     public double CardWidth {get;set;}=750;
     public double CardHeight{get;set;}=1050;
+    public int SheetColumns {get;set;}=3;
+    public int SheetRows {get;set;}=3;
     public List<TemplateItem> Items {get;set;}=new();
   }
   public class TemplateItem {

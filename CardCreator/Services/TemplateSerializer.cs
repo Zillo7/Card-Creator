@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -14,8 +15,8 @@ namespace CardCreator.Services {
   public static class TemplateSerializer {
     static readonly JsonSerializerOptions Options = new(){ WriteIndented=true, DefaultIgnoreCondition=JsonIgnoreCondition.WhenWritingNull };
 
-    public static void SaveToJson(Canvas canvas, string path, double cardW, double cardH){
-      var model=new TemplateModel{ CardWidth=cardW, CardHeight=cardH };
+    public static void SaveToJson(Canvas canvas, string path, double cardW, double cardH, int sheetCols, int sheetRows){
+      var model=new TemplateModel{ CardWidth=cardW, CardHeight=cardH, SheetColumns=sheetCols, SheetRows=sheetRows };
       int z=0;
       foreach(var obj in canvas.Children){
         if(obj is not Grid g || g.Children.Count==0) continue;
@@ -77,9 +78,30 @@ namespace CardCreator.Services {
       return model;
     }
 
-    public static void ExportToXaml(Canvas canvas, string path, double cardW, double cardH){
+    public static TemplateModel LoadFromXaml(Canvas canvas, string path){
+      var xaml=File.ReadAllText(path);
+      var obj=XamlReader.Parse(xaml) as Canvas;
+      var model=new TemplateModel();
+      if(obj!=null){
+        canvas.Children.Clear();
+        foreach(UIElement child in obj.Children)
+          canvas.Children.Add(child);
+        model.CardWidth=obj.Width;
+        model.CardHeight=obj.Height;
+        if(obj.Tag is string tag){
+          var parts=tag.Split(',');
+          if(parts.Length>=2){
+            if(int.TryParse(parts[0], out var c)) model.SheetColumns=c;
+            if(int.TryParse(parts[1], out var r)) model.SheetRows=r;
+          }
+        }
+      }
+      return model;
+    }
+
+    public static void ExportToXaml(Canvas canvas, string path, double cardW, double cardH, int sheetCols, int sheetRows){
       var sb=new StringBuilder();
-      sb.AppendLine("<Canvas xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" Width=\""+cardW+"\" Height=\""+cardH+"\">"); 
+      sb.AppendLine("<Canvas xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" Width=\""+cardW+"\" Height=\""+cardH+"\" Tag=\""+sheetCols+","+sheetRows+"\">");
       foreach(var obj in canvas.Children){
         if(obj is not Grid g || g.Children.Count==0) continue;
         var inner=(FrameworkElement)g.Children[0];
