@@ -63,6 +63,8 @@
                 <Separator/>
                 <MenuItem Header="_Bring Forward" Command="{Binding BringForwardCommand}"/>
                 <MenuItem Header="_Send Backward" Command="{Binding SendBackwardCommand}"/>
+                <Separator/>
+                <MenuItem Header="Sheet _Settings..." Command="{Binding SheetSettingsCommand}"/>
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="_Snap" IsCheckable="True" IsChecked="{Binding SnapEnabled}"/>
