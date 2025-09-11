@@ -66,6 +66,7 @@
                     <MenuItem Header="20" IsCheckable="True" IsChecked="{Binding GridSize, Converter={StaticResource GridSizeToBool}, ConverterParameter=20}"/>
                     <MenuItem Header="25" IsCheckable="True" IsChecked="{Binding GridSize, Converter={StaticResource GridSizeToBool}, ConverterParameter=25}"/>
                 </MenuItem>
+                <MenuItem Header="_Card Size..." Command="{Binding ChangeCardSizeCommand}"/>
             </MenuItem>
         </Menu>
         <Grid>
@@ -75,8 +76,8 @@
             </Grid.ColumnDefinitions>
             <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="#FFEFF1F4">
                 <Grid Margin="20">
-                    <Border Width="750" Height="1050" CornerRadius="24" BorderBrush="#FFCCD1D8" BorderThickness="2" Background="{StaticResource CheckerBrush}">
-                        <Canvas x:Name="CardCanvas" Background="Transparent" Focusable="True"
+                    <Border Width="{Binding CardWidth}" Height="{Binding CardHeight}" CornerRadius="24" BorderBrush="#FFCCD1D8" BorderThickness="2" Background="{StaticResource CheckerBrush}">
+                        <Canvas x:Name="CardCanvas" Width="{Binding CardWidth}" Height="{Binding CardHeight}" Background="Transparent" Focusable="True"
               MouseLeftButtonDown="CardCanvas_MouseLeftButtonDown"
               MouseMove="CardCanvas_MouseMove"
               MouseLeftButtonUp="CardCanvas_MouseLeftButtonUp">
