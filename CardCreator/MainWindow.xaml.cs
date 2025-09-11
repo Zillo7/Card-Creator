@@ -113,6 +113,8 @@ namespace CardCreator
                 if (SnapEnabled) { nx = Snap(nx); ny = Snap(ny); }
                 Canvas.SetLeft(_draggingContainer, Math.Max(0, nx)); Canvas.SetTop(_draggingContainer, Math.Max(0, ny));
                 if (GuidelinesEnabled) UpdateGuidelines(_draggingContainer);
+                if (_selected.Count == 1 && _selected[0] == _draggingContainer)
+                    Inspector.RefreshPosition();
             }
         }
 
