@@ -163,6 +163,7 @@ namespace CardCreator
             if (_canvas == null) return;
             var img = new Image { Stretch = Stretch.Uniform, RenderTransformOrigin = new Point(0.5, 0.5) };
             var container = CreateContainer(img, 100, 100, 200, 140);
+            container.Background = Brushes.White;
             _canvas.Children.Add(container); SelectSingle(container);
         }
 
