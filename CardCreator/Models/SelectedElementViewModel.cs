@@ -2,6 +2,8 @@ using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -110,6 +112,13 @@ namespace CardCreator.Models {
         }
     public string Text { get=> (Element as TextBlock)?.Text ?? ""; set{ if(Element is TextBlock tb){ tb.Text=value; FitToText(tb); OnPropertyChanged(); } } }
     public double FontSize { get=> (Element as TextBlock)?.FontSize ?? 16; set{ if(Element is TextBlock tb){ tb.FontSize=value; FitToText(tb); OnPropertyChanged(); } } }
+
+    public IEnumerable<FontFamily> FontFamilies { get; } = Fonts.SystemFontFamilies.OrderBy(f => f.Source);
+    public FontFamily FontFamily {
+      get => (Element as TextBlock)?.FontFamily ?? Fonts.SystemFontFamilies.First();
+      set { if (Element is TextBlock tb) { tb.FontFamily = value; FitToText(tb); OnPropertyChanged(); } }
+    }
+
     public string FontStyleOption {
       get {
         if (Element is TextBlock tb) {
@@ -158,6 +167,19 @@ namespace CardCreator.Models {
           try{ tb.Foreground=new SolidColorBrush((Color)ColorConverter.ConvertFromString(value)); }catch{}
           OnPropertyChanged();
         }
+      }
+    }
+    public bool IsHidden {
+      get {
+        if (Element == null) return false;
+        return Element.Visibility != Visibility.Visible;
+      }
+      set {
+        if (Element == null) return;
+        Element.Visibility = value ? Visibility.Hidden : Visibility.Visible;
+        if (Element.Parent is Grid g && Element is Image)
+          g.Background = value ? Brushes.Transparent : Brushes.White;
+        OnPropertyChanged();
       }
     }
     public string ImageSourcePath {
