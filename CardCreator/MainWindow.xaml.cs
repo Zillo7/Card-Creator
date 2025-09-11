@@ -604,19 +604,23 @@ public class MainViewModel : INotifyPropertyChanged
             return;
         var dlg = new SaveFileDialog { Filter = "Template JSON|*.json" };
         if (dlg.ShowDialog() == true)
-            TemplateSerializer.SaveToJson(_canvas, dlg.FileName, CardWidth, CardHeight);
+            TemplateSerializer.SaveToJson(_canvas, dlg.FileName, CardWidth, CardHeight, _sheetColumns, _sheetRows);
     }
     private void Load()
     {
         if (_canvas == null)
             return;
-        var dlg = new OpenFileDialog { Filter = "Template JSON|*.json" };
+        var dlg = new OpenFileDialog { Filter = "Template JSON or XAML|*.json;*.xaml" };
         if (dlg.ShowDialog() == true)
         {
-            var model = TemplateSerializer.LoadFromJson(_canvas, dlg.FileName);
+            TemplateModel model = dlg.FileName.EndsWith(".xaml", StringComparison.OrdinalIgnoreCase)
+                ? TemplateSerializer.LoadFromXaml(_canvas, dlg.FileName)
+                : TemplateSerializer.LoadFromJson(_canvas, dlg.FileName);
             ClearSelection();
             CardWidth = model.CardWidth;
             CardHeight = model.CardHeight;
+            _sheetColumns = model.SheetColumns;
+            _sheetRows = model.SheetRows;
         }
     }
     private void ExportXaml()
@@ -625,7 +629,7 @@ public class MainViewModel : INotifyPropertyChanged
             return;
         var dlg = new SaveFileDialog { Filter = "XAML Canvas|*.xaml" };
         if (dlg.ShowDialog() == true)
-            TemplateSerializer.ExportToXaml(_canvas, dlg.FileName, CardWidth, CardHeight);
+            TemplateSerializer.ExportToXaml(_canvas, dlg.FileName, CardWidth, CardHeight, _sheetColumns, _sheetRows);
     }
     private void SaveImages()
     {
