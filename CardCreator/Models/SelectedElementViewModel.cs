@@ -16,6 +16,15 @@ namespace CardCreator.Models {
     public bool IsText => Element is TextBlock;
     public bool IsImage => Element is Image;
     public void SetElement(FrameworkElement? element){ Element=element; Container=element?.Parent as FrameworkElement; ElementType=element?.GetType().Name; OnPropertyChanged(string.Empty); }
+    public string Name {
+      get => Element?.Name ?? "";
+      set {
+        if (Element != null) {
+          Element.Name = value;
+          OnPropertyChanged();
+        }
+      }
+    }
     double GetLeft()=> Container!=null? Canvas.GetLeft(Container):0;
     void SetLeft(double v){ if(Container!=null){ Canvas.SetLeft(Container,v); OnPropertyChanged(nameof(X)); } }
     double GetTop()=> Container!=null? Canvas.GetTop(Container):0;

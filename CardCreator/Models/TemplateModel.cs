@@ -13,6 +13,7 @@ namespace CardCreator.Models {
     public double Height {get;set;}
     public double Rotation {get;set;}
     public int Z {get;set;}
+    public string? Name {get;set;}
     public string? Text {get;set;}
     public double? FontSize {get;set;}
     public bool? Bold {get;set;}
