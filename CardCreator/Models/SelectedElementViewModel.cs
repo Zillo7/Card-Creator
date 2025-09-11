@@ -76,7 +76,7 @@ namespace CardCreator.Models {
       }
     }
     void FitToText(TextBlock tb){
-      tb.Measure(new Size(tb.MaxWidth, tb.MaxHeight));
+      tb.Measure(new Size(double.PositiveInfinity,double.PositiveInfinity));
       var size=tb.DesiredSize;
       tb.Width=size.Width; tb.Height=size.Height;
       if(tb.Parent is Grid g){ g.Width=size.Width; g.Height=size.Height; }

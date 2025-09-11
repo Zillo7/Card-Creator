@@ -99,7 +99,7 @@
                         <TextBlock Text="Rotation" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
                         <TextBox Text="{Binding Rotation, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="4" Grid.Column="1"/>
                         <TextBlock Text="Text" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5" Grid.Column="1" IsEnabled="{Binding IsText}"/>
+                        <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5" Grid.Column="1" IsEnabled="{Binding IsText}" AcceptsReturn="True" AcceptsTab="True"/>
                         <TextBlock Text="Font Size" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center"/>
                         <TextBox Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="6" Grid.Column="1" IsEnabled="{Binding IsText}"/>
                         <TextBlock Text="Font Style" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center"/>
