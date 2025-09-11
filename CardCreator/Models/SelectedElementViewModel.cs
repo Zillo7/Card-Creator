@@ -16,11 +16,12 @@ namespace CardCreator.Models {
     public bool IsText => Element is TextBlock;
     public bool IsImage => Element is Image;
     public void SetElement(FrameworkElement? element){ Element=element; Container=element?.Parent as FrameworkElement; ElementType=element?.GetType().Name; OnPropertyChanged(string.Empty); }
-    public string Name {
-      get => Element?.Name ?? "";
+    public string ControlName {
+      get => Element?.Tag as string ?? "";
       set {
         if (Element != null) {
-          Element.Name = value;
+          Element.Tag = value;
+          if (Container != null) Container.Tag = value;
           OnPropertyChanged();
         }
       }
