@@ -47,9 +47,12 @@ namespace CardCreator
         public RelayCommand DistributeVCommand { get; }
         public RelayCommand BringForwardCommand { get; }
         public RelayCommand SendBackwardCommand { get; }
+        public RelayCommand ChangeCardSizeCommand { get; }
 
         public SelectedElementViewModel Inspector { get; } = new();
         private readonly List<Grid> _selected = new();
+        private double _cardWidth = 750; public double CardWidth { get => _cardWidth; set { _cardWidth = value; OnPropertyChanged(); } }
+        private double _cardHeight = 1050; public double CardHeight { get => _cardHeight; set { _cardHeight = value; OnPropertyChanged(); } }
         public IEnumerable<Grid> SelectedItems => _selected;
         public FrameworkElement? SingleSelectedInner => _selected.Count == 1 ? (FrameworkElement?)_selected[0].Children[0] : null;
         public bool HasSelection => _selected.Count > 0;
@@ -76,6 +79,7 @@ namespace CardCreator
             DistributeVCommand = new RelayCommand(_ => DistributeV(), _ => _selected.Count >= 3);
             BringForwardCommand = new RelayCommand(_ => ChangeZ(1), _ => _selected.Count >= 1);
             SendBackwardCommand = new RelayCommand(_ => ChangeZ(-1), _ => _selected.Count >= 1);
+            ChangeCardSizeCommand = new RelayCommand(_ => ChangeCardSize());
         }
 
         public void AttachCanvas(Canvas canvas, Line guideH, Line guideV, Rectangle marquee) { _canvas = canvas; _guideH = guideH; _guideV = guideV; _marquee = marquee; }
@@ -202,9 +206,9 @@ namespace CardCreator
 
         private void DeleteSelected() { if (_canvas == null) return; foreach (var c in _selected.ToList()) _canvas.Children.Remove(c); ClearSelection(); }
 
-        private void Save() { if (_canvas == null) return; var dlg = new SaveFileDialog { Filter = "Template JSON|*.json" }; if (dlg.ShowDialog() == true) TemplateSerializer.SaveToJson(_canvas, dlg.FileName, 750, 1050); }
-        private void Load() { if (_canvas == null) return; var dlg = new OpenFileDialog { Filter = "Template JSON|*.json" }; if (dlg.ShowDialog() == true) { TemplateSerializer.LoadFromJson(_canvas, dlg.FileName); ClearSelection(); } }
-        private void ExportXaml() { if (_canvas == null) return; var dlg = new SaveFileDialog { Filter = "XAML Canvas|*.xaml" }; if (dlg.ShowDialog() == true) TemplateSerializer.ExportToXaml(_canvas, dlg.FileName, 750, 1050); }
+        private void Save() { if (_canvas == null) return; var dlg = new SaveFileDialog { Filter = "Template JSON|*.json" }; if (dlg.ShowDialog() == true) TemplateSerializer.SaveToJson(_canvas, dlg.FileName, CardWidth, CardHeight); }
+        private void Load() { if (_canvas == null) return; var dlg = new OpenFileDialog { Filter = "Template JSON|*.json" }; if (dlg.ShowDialog() == true) { var model = TemplateSerializer.LoadFromJson(_canvas, dlg.FileName); ClearSelection(); CardWidth = model.CardWidth; CardHeight = model.CardHeight; } }
+        private void ExportXaml() { if (_canvas == null) return; var dlg = new SaveFileDialog { Filter = "XAML Canvas|*.xaml" }; if (dlg.ShowDialog() == true) TemplateSerializer.ExportToXaml(_canvas, dlg.FileName, CardWidth, CardHeight); }
 
         private void AlignLeft() { if (_canvas == null || _selected.Count < 2) return; double minX = _selected.Min(c => Canvas.GetLeft(c)); foreach (var c in _selected) Canvas.SetLeft(c, SnapEnabled ? Snap(minX) : minX); }
         private void AlignCenter() { if (_canvas == null || _selected.Count < 2) return; double target = _selected.Select(c => Canvas.GetLeft(c) + c.Width / 2).Average(); foreach (var c in _selected) Canvas.SetLeft(c, SnapEnabled ? Snap(target - c.Width / 2) : target - c.Width / 2); }
@@ -241,15 +245,25 @@ namespace CardCreator
                 if (Math.Abs(x - x2) <= tol || Math.Abs(cx - cx2) <= tol || Math.Abs(r - r2) <= tol)
                 {
                     double gx = Math.Abs(x - x2) <= tol ? x2 : (Math.Abs(cx - cx2) <= tol ? cx2 : r2);
-                    _guideV.X1 = _guideV.X2 = gx; _guideV.Y1 = 0; _guideV.Y2 = _canvas.Height > 0 ? _canvas.Height : 1050; _guideV.Visibility = Visibility.Visible; showV = true;
+                    _guideV.X1 = _guideV.X2 = gx; _guideV.Y1 = 0; _guideV.Y2 = _canvas.Height > 0 ? _canvas.Height : CardHeight; _guideV.Visibility = Visibility.Visible; showV = true;
                 }
                 if (Math.Abs(y - y2) <= tol || Math.Abs(cy - cy2) <= tol || Math.Abs(b - b2) <= tol)
                 {
                     double gy = Math.Abs(y - y2) <= tol ? y2 : (Math.Abs(cy - cy2) <= tol ? cy2 : b2);
-                    _guideH.Y1 = _guideH.Y2 = gy; _guideH.X1 = 0; _guideH.X2 = _canvas.Width > 0 ? _canvas.Width : 750; _guideH.Visibility = Visibility.Visible; showH = true;
+                    _guideH.Y1 = _guideH.Y2 = gy; _guideH.X1 = 0; _guideH.X2 = _canvas.Width > 0 ? _canvas.Width : CardWidth; _guideH.Visibility = Visibility.Visible; showH = true;
                 }
             }
             if (!showV) _guideV.Visibility = Visibility.Collapsed; if (!showH) _guideH.Visibility = Visibility.Collapsed;
+        }
+
+        private void ChangeCardSize()
+        {
+            var dlg = new CanvasSizeDialog(CardWidth, CardHeight) { Owner = Application.Current.MainWindow };
+            if (dlg.ShowDialog() == true)
+            {
+                CardWidth = dlg.VM.WidthDip;
+                CardHeight = dlg.VM.HeightDip;
+            }
         }
         private void HideGuides() { if (_guideH != null) _guideH.Visibility = Visibility.Collapsed; if (_guideV != null) _guideV.Visibility = Visibility.Collapsed; }
 
