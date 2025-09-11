@@ -88,24 +88,34 @@
                             <ColumnDefinition Width="110"/>
                             <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Type" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding ElementType, Mode=OneWay}" Grid.Row="0" Grid.Column="1" IsReadOnly="True"/>
-                        <TextBlock Text="X" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding X, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="1" Grid.Column="1"/>
-                        <TextBlock Text="Y" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Y, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="2" Grid.Column="1"/>
-                        <TextBlock Text="Width" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Width, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="3" Grid.Column="1"/>
-                        <TextBlock Text="Height" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Height, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="4" Grid.Column="1"/>
-                        <TextBlock Text="Rotation" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Rotation, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="5" Grid.Column="1"/>
-                        <TextBlock Text="Text" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" Grid.Row="6" Grid.Column="1" IsEnabled="{Binding IsText}"/>
-                        <TextBlock Text="Font Size" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="7" Grid.Column="1" IsEnabled="{Binding IsText}"/>
-                        <TextBlock Text="Bold" Grid.Row="8" Grid.Column="0" VerticalAlignment="Center"/>
-                        <CheckBox IsChecked="{Binding Bold, UpdateSourceTrigger=PropertyChanged}" Grid.Row="8" Grid.Column="1" IsEnabled="{Binding IsText}"/>
+                        <TextBlock Text="X" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding X, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="0" Grid.Column="1"/>
+                        <TextBlock Text="Y" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Y, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="1" Grid.Column="1"/>
+                        <TextBlock Text="Max Width" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding MaxWidth, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="2" Grid.Column="1"/>
+                        <TextBlock Text="Max Height" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding MaxHeight, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="3" Grid.Column="1"/>
+                        <TextBlock Text="Rotation" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Rotation, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="4" Grid.Column="1"/>
+                        <TextBlock Text="Text" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5" Grid.Column="1" IsEnabled="{Binding IsText}"/>
+                        <TextBlock Text="Font Size" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="6" Grid.Column="1" IsEnabled="{Binding IsText}"/>
+                        <TextBlock Text="Font Style" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center"/>
+                        <ComboBox SelectedItem="{Binding FontStyleOption, UpdateSourceTrigger=PropertyChanged}" Grid.Row="7" Grid.Column="1" IsEnabled="{Binding IsText}">
+                            <sys:String>None</sys:String>
+                            <sys:String>Italic</sys:String>
+                            <sys:String>Bold</sys:String>
+                            <sys:String>Bold Italic</sys:String>
+                        </ComboBox>
+                        <TextBlock Text="Text Align" Grid.Row="8" Grid.Column="0" VerticalAlignment="Center"/>
+                        <ComboBox SelectedItem="{Binding TextAlignment, UpdateSourceTrigger=PropertyChanged}" Grid.Row="8" Grid.Column="1" IsEnabled="{Binding IsText}">
+                            <TextAlignment>Left</TextAlignment>
+                            <TextAlignment>Center</TextAlignment>
+                            <TextAlignment>Right</TextAlignment>
+                            <TextAlignment>Justify</TextAlignment>
+                        </ComboBox>
                         <TextBlock Text="Color (#RRGGBB)" Grid.Row="9" Grid.Column="0" VerticalAlignment="Center"/>
                         <TextBox Text="{Binding ForegroundHex, UpdateSourceTrigger=PropertyChanged}" Grid.Row="9" Grid.Column="1" IsEnabled="{Binding IsText}"/>
                         <TextBlock Text="Image Source" Grid.Row="10" Grid.Column="0" VerticalAlignment="Center"/>
