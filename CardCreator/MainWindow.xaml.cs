@@ -3,14 +3,18 @@ using CardCreator.Services;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
 namespace CardCreator
@@ -18,7 +22,7 @@ namespace CardCreator
     public partial class MainWindow : Window
     {
         public MainViewModel VM => (MainViewModel)DataContext;
-        public MainWindow() { Resources["NullToBoolInverse"] = new NullToBoolInverseConverter(); InitializeComponent(); VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee); }
+        public MainWindow() { Resources["NullToBoolInverse"] = new NullToBoolInverseConverter(); InitializeComponent(); VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee); VM.AddCard(); }
         private void CardCanvas_MouseLeftButtonDown(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftDown(e);
         private void CardCanvas_MouseMove(object s, MouseEventArgs e) => VM.OnCanvasMouseMove(e);
         private void CardCanvas_MouseLeftButtonUp(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftUp(e);
@@ -48,6 +52,10 @@ namespace CardCreator
         public RelayCommand BringForwardCommand { get; }
         public RelayCommand SendBackwardCommand { get; }
         public RelayCommand ChangeCardSizeCommand { get; }
+        public RelayCommand AddCardCommand { get; }
+        public RelayCommand RemoveCardCommand { get; }
+        public RelayCommand SaveCsvCommand { get; }
+        public RelayCommand LoadCsvCommand { get; }
 
         public SelectedElementViewModel Inspector { get; } = new();
         private readonly List<Grid> _selected = new();
@@ -56,6 +64,12 @@ namespace CardCreator
         public IEnumerable<Grid> SelectedItems => _selected;
         public FrameworkElement? SingleSelectedInner => _selected.Count == 1 ? (FrameworkElement?)_selected[0].Children[0] : null;
         public bool HasSelection => _selected.Count > 0;
+
+        public ObservableCollection<CardData> Cards { get; } = new();
+        private CardData? _selectedCard;
+        public CardData? SelectedCard { get => _selectedCard; set { _selectedCard = value; OnPropertyChanged(); RemoveCardCommand.RaiseCanExecuteChanged(); ApplyCardData(); } }
+        private int _cardCounter = 1;
+        private string _lastControlName = "";
 
         private bool _snapEnabled = true; public bool SnapEnabled { get => _snapEnabled; set { _snapEnabled = value; OnPropertyChanged(); } }
         private int _gridSize = 10; public int GridSize { get => _gridSize; set { _gridSize = value; OnPropertyChanged(); } }
@@ -79,6 +93,11 @@ namespace CardCreator
             BringForwardCommand = new RelayCommand(_ => ChangeZ(1), _ => _selected.Count >= 1);
             SendBackwardCommand = new RelayCommand(_ => ChangeZ(-1), _ => _selected.Count >= 1);
             ChangeCardSizeCommand = new RelayCommand(_ => ChangeCardSize());
+            AddCardCommand = new RelayCommand(_ => AddCard());
+            RemoveCardCommand = new RelayCommand(_ => RemoveCard(), _ => SelectedCard != null);
+            SaveCsvCommand = new RelayCommand(_ => SaveCsv());
+            LoadCsvCommand = new RelayCommand(_ => LoadCsv());
+            Inspector.PropertyChanged += OnInspectorPropertyChanged;
         }
 
         public void AttachCanvas(Canvas canvas, Line guideH, Line guideV, Rectangle marquee) { _canvas = canvas; _guideH = guideH; _guideV = guideV; _marquee = marquee; }
@@ -285,13 +304,303 @@ namespace CardCreator
             DistributeHCommand.RaiseCanExecuteChanged(); DistributeVCommand.RaiseCanExecuteChanged();
         }
 
-        private void UpdateInspector() { if (_selected.Count == 1) Inspector.SetElement((FrameworkElement)_selected[0].Children[0]); else Inspector.SetElement(null); }
+        private void UpdateInspector() { if (_selected.Count == 1) { Inspector.SetElement((FrameworkElement)_selected[0].Children[0]); _lastControlName = Inspector.ControlName; } else { Inspector.SetElement(null); _lastControlName = ""; } }
 
         private void DeleteSelected() { if (_canvas == null) return; foreach (var c in _selected.ToList()) _canvas.Children.Remove(c); ClearSelection(); }
 
         private void Save() { if (_canvas == null) return; var dlg = new SaveFileDialog { Filter = "Template JSON|*.json" }; if (dlg.ShowDialog() == true) TemplateSerializer.SaveToJson(_canvas, dlg.FileName, CardWidth, CardHeight); }
         private void Load() { if (_canvas == null) return; var dlg = new OpenFileDialog { Filter = "Template JSON|*.json" }; if (dlg.ShowDialog() == true) { var model = TemplateSerializer.LoadFromJson(_canvas, dlg.FileName); ClearSelection(); CardWidth = model.CardWidth; CardHeight = model.CardHeight; } }
         private void ExportXaml() { if (_canvas == null) return; var dlg = new SaveFileDialog { Filter = "XAML Canvas|*.xaml" }; if (dlg.ShowDialog() == true) TemplateSerializer.ExportToXaml(_canvas, dlg.FileName, CardWidth, CardHeight); }
+
+        public void AddCard()
+        {
+            if (_canvas == null) return;
+            var card = new CardData { Name = $"Card {_cardCounter++}", Quantity = 1 };
+            foreach (var obj in _canvas.Children)
+            {
+                if (obj is not Grid g || g.Children.Count == 0) continue;
+                var inner = g.Children[0] as FrameworkElement;
+                if (inner == null) continue;
+                if (inner.Tag is string t && !string.IsNullOrWhiteSpace(t))
+                    card.Fields[t] = CreateFieldFromElement(inner);
+            }
+            Cards.Add(card);
+            SelectedCard = card;
+        }
+
+        private void RemoveCard()
+        {
+            if (SelectedCard == null) return;
+            int idx = Cards.IndexOf(SelectedCard);
+            Cards.Remove(SelectedCard);
+            SelectedCard = Cards.Count > 0 ? Cards[Math.Min(idx, Cards.Count - 1)] : null;
+        }
+
+        private void ApplyCardData()
+        {
+            if (_canvas == null || SelectedCard == null) return;
+            foreach (var obj in _canvas.Children)
+            {
+                if (obj is not Grid g || g.Children.Count == 0) continue;
+                var inner = g.Children[0] as FrameworkElement;
+                if (inner == null) continue;
+                if (inner.Tag is not string name || string.IsNullOrWhiteSpace(name)) continue;
+                if (SelectedCard.Fields.TryGetValue(name, out var field))
+                    ApplyFieldToElement(inner, field);
+            }
+            if (_selected.Count == 1) Inspector.RefreshPosition();
+        }
+
+        private CardField CreateFieldFromElement(FrameworkElement el)
+        {
+            var field = new CardField();
+            if (el is TextBlock tb)
+            {
+                field.Text = tb.Text;
+                field.FontSize = tb.FontSize;
+                field.FontFamily = tb.FontFamily.Source;
+                bool bold = tb.FontWeight == FontWeights.Bold;
+                bool italic = tb.FontStyle == FontStyles.Italic;
+                field.FontStyle = bold && italic ? "Bold Italic" : (bold ? "Bold" : (italic ? "Italic" : "None"));
+                field.TextAlignment = tb.TextAlignment.ToString();
+                if (tb.Foreground is SolidColorBrush scb)
+                    field.Foreground = $"#{scb.Color.R:X2}{scb.Color.G:X2}{scb.Color.B:X2}";
+            }
+            else if (el is Image img)
+            {
+                if (img.Source is BitmapImage bi)
+                    field.Source = bi.UriSource?.LocalPath ?? bi.UriSource?.ToString();
+                field.Stretch = img.Stretch.ToString();
+            }
+            return field;
+        }
+
+        private void ApplyFieldToElement(FrameworkElement el, CardField field)
+        {
+            if (el is TextBlock tb)
+            {
+                if (field.Text != null) tb.Text = field.Text;
+                if (field.FontSize.HasValue) tb.FontSize = field.FontSize.Value;
+                if (field.FontFamily != null) try { tb.FontFamily = new FontFamily(field.FontFamily); } catch { }
+                if (field.FontStyle != null)
+                {
+                    switch (field.FontStyle)
+                    {
+                        case "Italic":
+                            tb.FontStyle = FontStyles.Italic; tb.FontWeight = FontWeights.Normal; break;
+                        case "Bold":
+                            tb.FontStyle = FontStyles.Normal; tb.FontWeight = FontWeights.Bold; break;
+                        case "Bold Italic":
+                            tb.FontStyle = FontStyles.Italic; tb.FontWeight = FontWeights.Bold; break;
+                        default:
+                            tb.FontStyle = FontStyles.Normal; tb.FontWeight = FontWeights.Normal; break;
+                    }
+                }
+                if (field.TextAlignment != null && Enum.TryParse<TextAlignment>(field.TextAlignment, out var ta)) tb.TextAlignment = ta;
+                if (field.Foreground != null) try { tb.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(field.Foreground)); } catch { }
+            }
+            else if (el is Image img)
+            {
+                if (field.Source != null)
+                {
+                    try
+                    {
+                        var bi = new BitmapImage();
+                        bi.BeginInit(); bi.UriSource = new Uri(field.Source, UriKind.RelativeOrAbsolute); bi.CacheOption = BitmapCacheOption.OnLoad; bi.EndInit();
+                        img.Source = bi;
+                    }
+                    catch { }
+                }
+                if (field.Stretch != null && Enum.TryParse<Stretch>(field.Stretch, out var st)) img.Stretch = st;
+            }
+        }
+
+        private void SaveCsv()
+        {
+            if (_canvas == null) return;
+            var dlg = new SaveFileDialog { Filter = "CSV|*.csv" };
+            if (dlg.ShowDialog() != true) return;
+            var controls = GetTemplateControls();
+            var headers = new List<string> { "Name", "Quantity" };
+            foreach (var c in controls)
+            {
+                if (c.type == "Text")
+                {
+                    headers.Add($"{c.name}.Text");
+                    headers.Add($"{c.name}.FontSize");
+                    headers.Add($"{c.name}.FontFamily");
+                    headers.Add($"{c.name}.FontStyle");
+                    headers.Add($"{c.name}.TextAlignment");
+                    headers.Add($"{c.name}.Foreground");
+                }
+                else if (c.type == "Image")
+                {
+                    headers.Add($"{c.name}.Source");
+                }
+            }
+            var sb = new StringBuilder();
+            sb.AppendLine(string.Join(",", headers.Select(CsvEscape)));
+            foreach (var card in Cards)
+            {
+                var values = new List<string> { CsvEscape(card.Name), CsvEscape(card.Quantity.ToString()) };
+                foreach (var c in controls)
+                {
+                    card.Fields.TryGetValue(c.name, out var field);
+                    if (c.type == "Text")
+                    {
+                        values.Add(CsvEscape(field?.Text));
+                        values.Add(CsvEscape(field?.FontSize?.ToString()));
+                        values.Add(CsvEscape(field?.FontFamily));
+                        values.Add(CsvEscape(field?.FontStyle));
+                        values.Add(CsvEscape(field?.TextAlignment));
+                        values.Add(CsvEscape(field?.Foreground));
+                    }
+                    else if (c.type == "Image")
+                    {
+                        values.Add(CsvEscape(field?.Source));
+                    }
+                }
+                sb.AppendLine(string.Join(",", values));
+            }
+            File.WriteAllText(dlg.FileName, sb.ToString());
+        }
+
+        private void LoadCsv()
+        {
+            if (_canvas == null) return;
+            var dlg = new OpenFileDialog { Filter = "CSV|*.csv" };
+            if (dlg.ShowDialog() != true) return;
+            var lines = File.ReadAllLines(dlg.FileName);
+            if (lines.Length == 0) return;
+            var headers = ParseCsvLine(lines[0]);
+            var columns = new List<(string control, string prop)>();
+            for (int i = 2; i < headers.Count; i++)
+            {
+                var parts = headers[i].Split('.', 2);
+                if (parts.Length == 2) columns.Add((parts[0], parts[1]));
+            }
+            Cards.Clear();
+            for (int li = 1; li < lines.Length; li++)
+            {
+                var row = ParseCsvLine(lines[li]);
+                if (row.Count == 0) continue;
+                var card = new CardData();
+                card.Name = row.Count > 0 ? row[0] : $"Card {li}";
+                card.Quantity = row.Count > 1 && int.TryParse(row[1], out var q) ? q : 1;
+                for (int ci = 2; ci < row.Count && ci - 2 < columns.Count; ci++)
+                {
+                    var (control, prop) = columns[ci - 2];
+                    if (!card.Fields.TryGetValue(control, out var field))
+                    {
+                        field = new CardField();
+                        card.Fields[control] = field;
+                    }
+                    var val = row[ci];
+                    switch (prop)
+                    {
+                        case "Text": field.Text = val; break;
+                        case "FontSize": if (double.TryParse(val, out var fs)) field.FontSize = fs; break;
+                        case "FontFamily": field.FontFamily = val; break;
+                        case "FontStyle": field.FontStyle = val; break;
+                        case "TextAlignment": field.TextAlignment = val; break;
+                        case "Foreground": field.Foreground = val; break;
+                        case "Source": field.Source = val; break;
+                    }
+                }
+                Cards.Add(card);
+            }
+            SelectedCard = Cards.FirstOrDefault();
+        }
+
+        private List<(string name, string type)> GetTemplateControls()
+        {
+            var list = new List<(string name, string type)>();
+            if (_canvas == null) return list;
+            foreach (var obj in _canvas.Children)
+            {
+                if (obj is not Grid g || g.Children.Count == 0) continue;
+                var inner = g.Children[0] as FrameworkElement;
+                if (inner == null) continue;
+                if (inner.Tag is not string name || string.IsNullOrWhiteSpace(name)) continue;
+                var type = inner is TextBlock ? "Text" : inner is Image ? "Image" : "";
+                if (type != "") list.Add((name, type));
+            }
+            return list;
+        }
+
+        private string CsvEscape(string? s)
+        {
+            s ??= string.Empty;
+            if (s.Contains('"') || s.Contains(',') || s.Contains('\n'))
+                return $"\"{s.Replace("\"", "\"\"")}\"";
+            return s;
+        }
+
+        private List<string> ParseCsvLine(string line)
+        {
+            var result = new List<string>();
+            var sb = new StringBuilder();
+            bool inQuotes = false;
+            for (int i = 0; i < line.Length; i++)
+            {
+                char c = line[i];
+                if (inQuotes)
+                {
+                    if (c == '"')
+                    {
+                        if (i + 1 < line.Length && line[i + 1] == '"') { sb.Append('"'); i++; }
+                        else inQuotes = false;
+                    }
+                    else sb.Append(c);
+                }
+                else
+                {
+                    if (c == '"') inQuotes = true;
+                    else if (c == ',') { result.Add(sb.ToString()); sb.Clear(); }
+                    else sb.Append(c);
+                }
+            }
+            result.Add(sb.ToString());
+            return result;
+        }
+
+        private void OnInspectorPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (Inspector.Element == null) return;
+            if (SelectedCard == null) return;
+            var name = Inspector.ControlName;
+            if (string.IsNullOrWhiteSpace(name) && e.PropertyName != nameof(SelectedElementViewModel.ControlName)) return;
+            switch (e.PropertyName)
+            {
+                case nameof(SelectedElementViewModel.Text):
+                case nameof(SelectedElementViewModel.FontSize):
+                case nameof(SelectedElementViewModel.FontFamily):
+                case nameof(SelectedElementViewModel.FontStyleOption):
+                case nameof(SelectedElementViewModel.TextAlignment):
+                case nameof(SelectedElementViewModel.ForegroundHex):
+                    SelectedCard.Fields[name] = CreateFieldFromElement(Inspector.Element);
+                    break;
+                case nameof(SelectedElementViewModel.ImageSourcePath):
+                case nameof(SelectedElementViewModel.ImageStretch):
+                    SelectedCard.Fields[name] = CreateFieldFromElement(Inspector.Element);
+                    break;
+                case nameof(SelectedElementViewModel.ControlName):
+                    var newName = Inspector.ControlName;
+                    if (string.IsNullOrWhiteSpace(newName))
+                    {
+                        foreach (var c in Cards) c.Fields.Remove(_lastControlName);
+                    }
+                    else
+                    {
+                        foreach (var c in Cards)
+                        {
+                            if (c.Fields.Remove(_lastControlName, out var field)) c.Fields[newName] = field; else if (!c.Fields.ContainsKey(newName)) c.Fields[newName] = CreateFieldFromElement(Inspector.Element);
+                        }
+                    }
+                    _lastControlName = newName;
+                    break;
+            }
+        }
 
         private void AlignLeft() { if (_canvas == null || _selected.Count < 2) return; double minX = _selected.Min(c => Canvas.GetLeft(c)); foreach (var c in _selected) Canvas.SetLeft(c, SnapEnabled ? Snap(minX) : minX); }
         private void AlignCenter() { if (_canvas == null || _selected.Count < 2) return; double target = _selected.Select(c => Canvas.GetLeft(c) + c.Width / 2).Average(); foreach (var c in _selected) Canvas.SetLeft(c, SnapEnabled ? Snap(target - c.Width / 2) : target - c.Width / 2); }
