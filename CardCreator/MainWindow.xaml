@@ -30,6 +30,9 @@
                         <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xEDE1;" FontSize="16"/>
                     </MenuItem.Icon>
                 </MenuItem>
+                <Separator/>
+                <MenuItem Header="Save _Data CSV..." Command="{Binding SaveCsvCommand}"/>
+                <MenuItem Header="Load _Data CSV..." Command="{Binding LoadCsvCommand}"/>
             </MenuItem>
             <MenuItem Header="_Insert">
                 <MenuItem Header="Add _Text" Command="{Binding AddTextCommand}">
@@ -72,10 +75,30 @@
         </Menu>
         <Grid>
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
                 <ColumnDefinition/>
                 <ColumnDefinition Width="360"/>
             </Grid.ColumnDefinitions>
-            <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="#FFEFF1F4">
+            <Border Grid.Column="0" Margin="0,0,12,0" Padding="12" Background="White" BorderBrush="#FFCCD1D8" BorderThickness="1" CornerRadius="12">
+                <StackPanel>
+                    <TextBlock Text="Cards" FontSize="18" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <ListView ItemsSource="{Binding Cards}" SelectedItem="{Binding SelectedCard}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox Width="100" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBox Width="40" Margin="6,0,0,0" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="Add" Command="{Binding AddCardCommand}" Width="60"/>
+                        <Button Content="Remove" Command="{Binding RemoveCardCommand}" Width="60" Margin="8,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="#FFEFF1F4">
                 <Grid Margin="20">
                     <Border Width="{Binding CardWidth}" Height="{Binding CardHeight}" CornerRadius="24" BorderBrush="#FFCCD1D8" BorderThickness="2" Background="{StaticResource CheckerBrush}">
                         <Canvas x:Name="CardCanvas" Width="{Binding CardWidth}" Height="{Binding CardHeight}" Background="Transparent" Focusable="True"
@@ -89,7 +112,7 @@
                     </Border>
                 </Grid>
             </ScrollViewer>
-            <Border Grid.Column="1" Margin="12,0,0,0" Padding="12" Background="White" BorderBrush="#FFCCD1D8" BorderThickness="1" CornerRadius="12">
+            <Border Grid.Column="2" Margin="12,0,0,0" Padding="12" Background="White" BorderBrush="#FFCCD1D8" BorderThickness="1" CornerRadius="12">
                 <StackPanel>
                     <TextBlock Text="Inspector" FontSize="18" FontWeight="Bold" Margin="0,0,0,8"/>
                     <ItemsControl ItemsSource="{Binding SelectedItems}">
