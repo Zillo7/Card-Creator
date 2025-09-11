@@ -16,6 +16,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using WinForms = System.Windows.Forms;
+using IOPath = System.IO.Path;
 
 namespace CardCreator
 {
@@ -56,6 +58,8 @@ namespace CardCreator
         public RelayCommand RemoveCardCommand { get; }
         public RelayCommand SaveCsvCommand { get; }
         public RelayCommand LoadCsvCommand { get; }
+        public RelayCommand SaveImagesCommand { get; }
+        public RelayCommand SaveSheetsCommand { get; }
 
         public SelectedElementViewModel Inspector { get; } = new();
         private readonly List<Grid> _selected = new();
@@ -97,6 +101,8 @@ namespace CardCreator
             RemoveCardCommand = new RelayCommand(_ => RemoveCard(), _ => SelectedCard != null);
             SaveCsvCommand = new RelayCommand(_ => SaveCsv());
             LoadCsvCommand = new RelayCommand(_ => LoadCsv());
+            SaveImagesCommand = new RelayCommand(_ => SaveImages(), _ => Cards.Count > 0);
+            SaveSheetsCommand = new RelayCommand(_ => SaveSheets(), _ => Cards.Count > 0);
             Inspector.PropertyChanged += OnInspectorPropertyChanged;
         }
 
@@ -311,6 +317,88 @@ namespace CardCreator
         private void Save() { if (_canvas == null) return; var dlg = new SaveFileDialog { Filter = "Template JSON|*.json" }; if (dlg.ShowDialog() == true) TemplateSerializer.SaveToJson(_canvas, dlg.FileName, CardWidth, CardHeight); }
         private void Load() { if (_canvas == null) return; var dlg = new OpenFileDialog { Filter = "Template JSON|*.json" }; if (dlg.ShowDialog() == true) { var model = TemplateSerializer.LoadFromJson(_canvas, dlg.FileName); ClearSelection(); CardWidth = model.CardWidth; CardHeight = model.CardHeight; } }
         private void ExportXaml() { if (_canvas == null) return; var dlg = new SaveFileDialog { Filter = "XAML Canvas|*.xaml" }; if (dlg.ShowDialog() == true) TemplateSerializer.ExportToXaml(_canvas, dlg.FileName, CardWidth, CardHeight); }
+        private void SaveImages()
+        {
+            if (_canvas == null || Cards.Count == 0) return;
+            var folderDlg = new WinForms.FolderBrowserDialog();
+            if (folderDlg.ShowDialog() != WinForms.DialogResult.OK) return;
+            var fmtDlg = new SaveFileDialog { Filter = "PNG Image|*.png|JPEG Image|*.jpg;*.jpeg", FileName = "Card" };
+            if (fmtDlg.ShowDialog() != true) return;
+            var ext = IOPath.GetExtension(fmtDlg.FileName).ToLower();
+            bool jpeg = ext == ".jpg" || ext == ".jpeg";
+            string dir = folderDlg.SelectedPath;
+            var prev = SelectedCard;
+            for (int i = 0; i < Cards.Count; i++)
+            {
+                var card = Cards[i];
+                SelectedCard = card;
+                _canvas.UpdateLayout();
+                var rtb = new RenderTargetBitmap((int)CardWidth, (int)CardHeight, 96, 96, PixelFormats.Pbgra32);
+                rtb.Render(_canvas);
+                BitmapEncoder encoder = jpeg ? new JpegBitmapEncoder() : new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(rtb));
+                var safe = string.Join("_", card.Name.Split(IOPath.GetInvalidFileNameChars()));
+                string path = IOPath.Combine(dir, $"{i + 1:000}_{safe}{ext}");
+                using var fs = new FileStream(path, FileMode.Create);
+                encoder.Save(fs);
+            }
+            SelectedCard = prev;
+            _canvas.UpdateLayout();
+        }
+        private void SaveSheets()
+        {
+            if (_canvas == null || Cards.Count == 0) return;
+            var fileDlg = new SaveFileDialog { Filter = "PNG Image|*.png|JPEG Image|*.jpg;*.jpeg", FileName = "Sheet" };
+            if (fileDlg.ShowDialog() != true) return;
+            var ext = IOPath.GetExtension(fileDlg.FileName).ToLower();
+            bool jpeg = ext == ".jpg" || ext == ".jpeg";
+            var gridDlg = new SheetDialog(3, 3) { Owner = Application.Current.MainWindow };
+            if (gridDlg.ShowDialog() != true) return;
+            int cols = gridDlg.Columns;
+            int rows = gridDlg.Rows;
+            if (cols <= 0 || rows <= 0) return;
+            int perSheet = cols * rows;
+            var images = new List<RenderTargetBitmap>();
+            var prev = SelectedCard;
+            foreach (var card in Cards)
+            {
+                SelectedCard = card;
+                _canvas.UpdateLayout();
+                var rtb = new RenderTargetBitmap((int)CardWidth, (int)CardHeight, 96, 96, PixelFormats.Pbgra32);
+                rtb.Render(_canvas);
+                for (int i = 0; i < Math.Max(1, card.Quantity); i++)
+                    images.Add(rtb);
+            }
+            SelectedCard = prev;
+            _canvas.UpdateLayout();
+            int sheetWidth = (int)(cols * CardWidth);
+            int sheetHeight = (int)(rows * CardHeight);
+            int sheetCount = (images.Count + perSheet - 1) / perSheet;
+            string dir = IOPath.GetDirectoryName(fileDlg.FileName)!;
+            string baseName = IOPath.GetFileNameWithoutExtension(fileDlg.FileName);
+            for (int s = 0; s < sheetCount; s++)
+            {
+                var dv = new DrawingVisual();
+                using (var dc = dv.RenderOpen())
+                {
+                    for (int i = 0; i < perSheet; i++)
+                    {
+                        int idx = s * perSheet + i;
+                        if (idx >= images.Count) break;
+                        int col = i % cols;
+                        int row = i / cols;
+                        dc.DrawImage(images[idx], new Rect(col * CardWidth, row * CardHeight, CardWidth, CardHeight));
+                    }
+                }
+                var sheetBmp = new RenderTargetBitmap(sheetWidth, sheetHeight, 96, 96, PixelFormats.Pbgra32);
+                sheetBmp.Render(dv);
+                BitmapEncoder encoder = jpeg ? new JpegBitmapEncoder() : new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(sheetBmp));
+                string path = sheetCount == 1 ? fileDlg.FileName : IOPath.Combine(dir, $"{baseName}_{s + 1}{ext}");
+                using var fs = new FileStream(path, FileMode.Create);
+                encoder.Save(fs);
+            }
+        }
 
         public void AddCard()
         {

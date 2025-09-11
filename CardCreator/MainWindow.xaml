@@ -33,6 +33,9 @@
                 <Separator/>
                 <MenuItem Header="Save _Data CSV..." Command="{Binding SaveCsvCommand}"/>
                 <MenuItem Header="Load _Data CSV..." Command="{Binding LoadCsvCommand}"/>
+                <Separator/>
+                <MenuItem Header="Save Card _Images..." Command="{Binding SaveImagesCommand}"/>
+                <MenuItem Header="Save Card _Sheets..." Command="{Binding SaveSheetsCommand}"/>
             </MenuItem>
             <MenuItem Header="_Insert">
                 <MenuItem Header="Add _Text" Command="{Binding AddTextCommand}">
