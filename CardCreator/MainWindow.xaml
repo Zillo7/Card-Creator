@@ -60,6 +60,7 @@
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="_Snap" IsCheckable="True" IsChecked="{Binding SnapEnabled}"/>
+                <MenuItem Header="Show _Guidelines" IsCheckable="True" IsChecked="{Binding GuidelinesEnabled}"/>
                 <MenuItem Header="_Grid Size">
                     <MenuItem Header="5" IsCheckable="True" IsChecked="{Binding GridSize, Converter={StaticResource GridSizeToBool}, ConverterParameter=5}"/>
                     <MenuItem Header="10" IsCheckable="True" IsChecked="{Binding GridSize, Converter={StaticResource GridSizeToBool}, ConverterParameter=10}"/>
@@ -94,94 +95,97 @@
                     <ItemsControl ItemsSource="{Binding SelectedItems}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Name}"/>
+                                <TextBlock Text="{Binding Tag}"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <Grid DataContext="{Binding Inspector}" Margin="0,12,0,0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                        <!--0-->
-                            <RowDefinition Height="Auto"/>
-                        <!--1-->
-                            <RowDefinition Height="Auto"/>
-                        <!--2-->
-                            <RowDefinition Height="Auto"/>
-                        <!--3-->
-                            <RowDefinition Height="Auto"/>
-                        <!--4-->
-                            <RowDefinition Height="Auto"/>
-                        <!--5-->
-                            <RowDefinition Height="Auto"/>
-                        <!--6-->
-                            <RowDefinition Height="Auto"/>
-                        <!--7 FontFamily-->
-                            <RowDefinition Height="Auto"/>
-                        <!--8 FontStyle-->
-                            <RowDefinition Height="Auto"/>
-                        <!--9 TextAlign-->
-                            <RowDefinition Height="Auto"/>
-                        <!--10 Color-->
-                            <RowDefinition Height="Auto"/>
-                        <!--11 ImageSource-->
-                            <RowDefinition Height="Auto"/>
-                        <!--12 Hidden-->
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="110"/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="X" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding X, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="0" Grid.Column="1"/>
-                        <TextBlock Text="Y" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Y, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="1" Grid.Column="1"/>
-                        <TextBlock Text="Width" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding WidthInput, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="1"/>
-                        <TextBlock Text="Height" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding HeightInput, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="1"/>
-                        <TextBlock Text="Rotation" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Rotation, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="4" Grid.Column="1"/>
-                        <TextBlock Text="Text" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5" Grid.Column="1" IsEnabled="{Binding IsText}" AcceptsReturn="True"/>
-                        <TextBlock Text="Font Size" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="6" Grid.Column="1" IsEnabled="{Binding IsText}"/>
-                        <TextBlock Text="Font Family" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center"/>
-                        <ComboBox ItemsSource="{Binding FontFamilies}" SelectedItem="{Binding FontFamily, UpdateSourceTrigger=PropertyChanged}" Grid.Row="7" Grid.Column="1" IsEnabled="{Binding IsText}" DisplayMemberPath="Source"/>
-                        <TextBlock Text="Font Style" Grid.Row="8" Grid.Column="0" VerticalAlignment="Center"/>
-                        <ComboBox SelectedItem="{Binding FontStyleOption, UpdateSourceTrigger=PropertyChanged}" Grid.Row="8" Grid.Column="1" IsEnabled="{Binding IsText}">
-                            <sys:String>None</sys:String>
-                            <sys:String>Italic</sys:String>
-                            <sys:String>Bold</sys:String>
-                            <sys:String>Bold Italic</sys:String>
-                        </ComboBox>
-                        <TextBlock Text="Text Align" Grid.Row="9" Grid.Column="0" VerticalAlignment="Center"/>
-                        <ComboBox SelectedItem="{Binding TextAlignment, UpdateSourceTrigger=PropertyChanged}" Grid.Row="9" Grid.Column="1" IsEnabled="{Binding IsText}">
-                            <TextAlignment>Left</TextAlignment>
-                            <TextAlignment>Center</TextAlignment>
-                            <TextAlignment>Right</TextAlignment>
-                            <TextAlignment>Justify</TextAlignment>
-                        </ComboBox>
-                        <TextBlock Text="Color (#RRGGBB)" Grid.Row="10" Grid.Column="0" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding ForegroundHex, UpdateSourceTrigger=PropertyChanged}" Grid.Row="10" Grid.Column="1" IsEnabled="{Binding IsText}"/>
-                        <TextBlock Text="Image Source" Grid.Row="11" Grid.Column="0" VerticalAlignment="Center"/>
-                        <StackPanel Orientation="Horizontal" Grid.Row="11" Grid.Column="1">
-                            <TextBox Width="200" Text="{Binding ImageSourcePath, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsImage}"/>
-                            <Button Content="Browse…" Click="BrowseImage_Click" IsEnabled="{Binding IsImage}" Margin="6,0,0,0"/>
-                        </StackPanel>
-                        <StackPanel Margin="0,10,0,0" Visibility="{Binding IsImage, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="Image Source"/>
-                            <StackPanel Orientation="Horizontal">
+                    <StackPanel DataContext="{Binding Inspector}" Margin="0,12,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                <!--0-->
+                                <RowDefinition Height="Auto"/>
+                <!--1-->
+                                <RowDefinition Height="Auto"/>
+                <!--2-->
+                                <RowDefinition Height="Auto"/>
+                <!--3-->
+                                <RowDefinition Height="Auto"/>
+                <!--4-->
+                                <RowDefinition Height="Auto"/>
+                <!--5-->
+                                <RowDefinition Height="Auto"/>
+                <!--6-->
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Label" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" Grid.Row="0" Grid.Column="1"/>
+                            <TextBlock Text="X" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding X, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="1" Grid.Column="1"/>
+                            <TextBlock Text="Y" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding Y, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="2" Grid.Column="1"/>
+                            <TextBlock Text="Width" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding WidthInput, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="1"/>
+                            <TextBlock Text="Height" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding HeightInput, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4" Grid.Column="1"/>
+                            <TextBlock Text="Rotation" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding Rotation, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="5" Grid.Column="1"/>
+                            <TextBlock Text="Hidden" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center"/>
+                            <CheckBox IsChecked="{Binding IsHidden, UpdateSourceTrigger=PropertyChanged}" Grid.Row="6" Grid.Column="1" IsEnabled="{Binding Element, Converter={StaticResource NullToBoolInverse}}"/>
+                        </Grid>
+                        <Grid Visibility="{Binding IsText, Converter={StaticResource BoolToVis}}" Margin="0,10,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Text" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" Grid.Row="0" Grid.Column="1" AcceptsReturn="True"/>
+                            <TextBlock Text="Font Size" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="1" Grid.Column="1"/>
+                            <TextBlock Text="Font Family" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+                            <ComboBox ItemsSource="{Binding FontFamilies}" SelectedItem="{Binding FontFamily, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="1" DisplayMemberPath="Source"/>
+                            <TextBlock Text="Font Style" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
+                            <ComboBox SelectedItem="{Binding FontStyleOption, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="1">
+                                <sys:String>None</sys:String>
+                                <sys:String>Italic</sys:String>
+                                <sys:String>Bold</sys:String>
+                                <sys:String>Bold Italic</sys:String>
+                            </ComboBox>
+                            <TextBlock Text="Text Align" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
+                            <ComboBox SelectedItem="{Binding TextAlignment, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4" Grid.Column="1">
+                                <TextAlignment>Left</TextAlignment>
+                                <TextAlignment>Center</TextAlignment>
+                                <TextAlignment>Right</TextAlignment>
+                                <TextAlignment>Justify</TextAlignment>
+                            </ComboBox>
+                            <TextBlock Text="Color (#RRGGBB)" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding ForegroundHex, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Visibility="{Binding IsImage, Converter={StaticResource BoolToVis}}" Margin="0,10,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Image Source" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1">
                                 <TextBox Width="200" Text="{Binding ImageSourcePath, UpdateSourceTrigger=PropertyChanged}"/>
                                 <Button Content="Browse…" Click="BrowseImage_Click" Margin="6,0,0,0"/>
                             </StackPanel>
-                        </StackPanel>
-                        <TextBlock Text="Hidden" Grid.Row="12" Grid.Column="0" VerticalAlignment="Center"/>
-                        <CheckBox IsChecked="{Binding IsHidden, UpdateSourceTrigger=PropertyChanged}" Grid.Row="12" Grid.Column="1" IsEnabled="{Binding Element, Converter={StaticResource NullToBoolInverse}}"/>
-                    </Grid>
-                    <Separator Margin="0,10,0,10"/>
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="Delete Selected" Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding HasSelection}"/>
-                        <CheckBox Content="Show Guidelines" IsChecked="{Binding GuidelinesEnabled}" Margin="10,0,0,0"/>
+                        </Grid>
                     </StackPanel>
                 </StackPanel>
             </Border>
