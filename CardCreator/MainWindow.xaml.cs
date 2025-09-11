@@ -16,6 +16,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using WinForms = System.Windows.Forms;
+using IOPath = System.IO.Path;
 
 namespace CardCreator
 {
@@ -56,6 +58,9 @@ namespace CardCreator
         public RelayCommand RemoveCardCommand { get; }
         public RelayCommand SaveCsvCommand { get; }
         public RelayCommand LoadCsvCommand { get; }
+        public RelayCommand SaveImagesCommand { get; }
+        public RelayCommand SaveSheetsCommand { get; }
+        public RelayCommand SheetSettingsCommand { get; }
 
         public SelectedElementViewModel Inspector { get; } = new();
         private readonly List<Grid> _selected = new();
@@ -74,6 +79,9 @@ namespace CardCreator
         private bool _snapEnabled = true; public bool SnapEnabled { get => _snapEnabled; set { _snapEnabled = value; OnPropertyChanged(); } }
         private int _gridSize = 10; public int GridSize { get => _gridSize; set { _gridSize = value; OnPropertyChanged(); } }
         private bool _guidelinesEnabled = true; public bool GuidelinesEnabled { get => _guidelinesEnabled; set { _guidelinesEnabled = value; OnPropertyChanged(); } }
+
+        private int _sheetColumns = 3, _sheetRows = 3;
+        private bool _useJpeg;
 
         public MainViewModel()
         {
@@ -97,7 +105,24 @@ namespace CardCreator
             RemoveCardCommand = new RelayCommand(_ => RemoveCard(), _ => SelectedCard != null);
             SaveCsvCommand = new RelayCommand(_ => SaveCsv());
             LoadCsvCommand = new RelayCommand(_ => LoadCsv());
+            SaveImagesCommand = new RelayCommand(_ => SaveImages(), _ => Cards.Count > 0);
+            SaveSheetsCommand = new RelayCommand(_ => SaveSheets(), _ => Cards.Count > 0);
+            SheetSettingsCommand = new RelayCommand(_ => ConfigureSheet());
+            Cards.CollectionChanged += (_, __) => { SaveImagesCommand.RaiseCanExecuteChanged(); SaveSheetsCommand.RaiseCanExecuteChanged(); };
             Inspector.PropertyChanged += OnInspectorPropertyChanged;
+        }
+
+        private bool ConfigureSheet()
+        {
+            var dlg = new SheetDialog(_sheetColumns, _sheetRows, _useJpeg) { Owner = Application.Current.MainWindow };
+            if (dlg.ShowDialog() == true)
+            {
+                _sheetColumns = dlg.Columns;
+                _sheetRows = dlg.Rows;
+                _useJpeg = dlg.UseJpeg;
+                return true;
+            }
+            return false;
         }
 
         public void AttachCanvas(Canvas canvas, Line guideH, Line guideV, Rectangle marquee) { _canvas = canvas; _guideH = guideH; _guideV = guideV; _marquee = marquee; }
@@ -311,6 +336,80 @@ namespace CardCreator
         private void Save() { if (_canvas == null) return; var dlg = new SaveFileDialog { Filter = "Template JSON|*.json" }; if (dlg.ShowDialog() == true) TemplateSerializer.SaveToJson(_canvas, dlg.FileName, CardWidth, CardHeight); }
         private void Load() { if (_canvas == null) return; var dlg = new OpenFileDialog { Filter = "Template JSON|*.json" }; if (dlg.ShowDialog() == true) { var model = TemplateSerializer.LoadFromJson(_canvas, dlg.FileName); ClearSelection(); CardWidth = model.CardWidth; CardHeight = model.CardHeight; } }
         private void ExportXaml() { if (_canvas == null) return; var dlg = new SaveFileDialog { Filter = "XAML Canvas|*.xaml" }; if (dlg.ShowDialog() == true) TemplateSerializer.ExportToXaml(_canvas, dlg.FileName, CardWidth, CardHeight); }
+        private void SaveImages()
+        {
+            if (_canvas == null || Cards.Count == 0) return;
+            if (!ConfigureSheet()) return;
+            var folderDlg = new WinForms.FolderBrowserDialog();
+            if (folderDlg.ShowDialog() != WinForms.DialogResult.OK) return;
+            string dir = folderDlg.SelectedPath;
+            var prev = SelectedCard;
+            for (int i = 0; i < Cards.Count; i++)
+            {
+                var card = Cards[i];
+                SelectedCard = card;
+                _canvas.UpdateLayout();
+                var rtb = new RenderTargetBitmap((int)CardWidth, (int)CardHeight, 96, 96, PixelFormats.Pbgra32);
+                rtb.Render(_canvas);
+                BitmapEncoder encoder = _useJpeg ? new JpegBitmapEncoder() : new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(rtb));
+                var safe = string.Join("_", card.Name.Split(IOPath.GetInvalidFileNameChars()));
+                string path = IOPath.Combine(dir, $"{safe}{(_useJpeg ? ".jpg" : ".png")}");
+                using var fs = new FileStream(path, FileMode.Create);
+                encoder.Save(fs);
+            }
+            SelectedCard = prev;
+            _canvas.UpdateLayout();
+        }
+        private void SaveSheets()
+        {
+            if (_canvas == null || Cards.Count == 0) return;
+            if (!ConfigureSheet()) return;
+            var fileDlg = new SaveFileDialog { Filter = _useJpeg ? "JPEG Image|*.jpg;*.jpeg" : "PNG Image|*.png", FileName = "Sheet", DefaultExt = _useJpeg ? ".jpg" : ".png" };
+            if (fileDlg.ShowDialog() != true) return;
+            int perSheet = _sheetColumns * _sheetRows;
+            var images = new List<RenderTargetBitmap>();
+            var prev = SelectedCard;
+            foreach (var card in Cards)
+            {
+                SelectedCard = card;
+                _canvas.UpdateLayout();
+                var rtb = new RenderTargetBitmap((int)CardWidth, (int)CardHeight, 96, 96, PixelFormats.Pbgra32);
+                rtb.Render(_canvas);
+                for (int i = 0; i < Math.Max(1, card.Quantity); i++)
+                    images.Add(rtb);
+            }
+            SelectedCard = prev;
+            _canvas.UpdateLayout();
+            int sheetWidth = (int)(_sheetColumns * CardWidth);
+            int sheetHeight = (int)(_sheetRows * CardHeight);
+            int sheetCount = (images.Count + perSheet - 1) / perSheet;
+            string dir = IOPath.GetDirectoryName(fileDlg.FileName)!;
+            string baseName = IOPath.GetFileNameWithoutExtension(fileDlg.FileName);
+            string ext = _useJpeg ? ".jpg" : ".png";
+            for (int s = 0; s < sheetCount; s++)
+            {
+                var dv = new DrawingVisual();
+                using (var dc = dv.RenderOpen())
+                {
+                    for (int i = 0; i < perSheet; i++)
+                    {
+                        int idx = s * perSheet + i;
+                        if (idx >= images.Count) break;
+                        int col = i % _sheetColumns;
+                        int row = i / _sheetColumns;
+                        dc.DrawImage(images[idx], new Rect(col * CardWidth, row * CardHeight, CardWidth, CardHeight));
+                    }
+                }
+                var sheetBmp = new RenderTargetBitmap(sheetWidth, sheetHeight, 96, 96, PixelFormats.Pbgra32);
+                sheetBmp.Render(dv);
+                BitmapEncoder encoder = _useJpeg ? new JpegBitmapEncoder() : new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(sheetBmp));
+                string path = sheetCount == 1 ? fileDlg.FileName : IOPath.Combine(dir, $"{baseName}_{s + 1}{ext}");
+                using var fs = new FileStream(path, FileMode.Create);
+                encoder.Save(fs);
+            }
+        }
 
         public void AddCard()
         {
