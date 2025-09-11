@@ -149,8 +149,9 @@ namespace CardCreator
         public void AddText()
         {
             if (_canvas == null) return;
-            var tb = new TextBlock { Text = "Text", FontSize = 28, Foreground = Brushes.Black, RenderTransformOrigin = new Point(0.5, 0.5), TextWrapping = TextWrapping.Wrap};
+            var tb = new TextBlock { Text = "Text", FontSize = 28, Foreground = Brushes.Black, RenderTransformOrigin = new Point(0.5, 0.5), TextWrapping = TextWrapping.Wrap };
             var container = CreateContainer(tb, 60, 60, 180, 60);
+            tb.HorizontalAlignment = HorizontalAlignment.Stretch; tb.VerticalAlignment = VerticalAlignment.Stretch;
             _canvas.Children.Add(container); SelectSingle(container);
         }
         public void AddImage()

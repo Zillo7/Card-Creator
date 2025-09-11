@@ -78,8 +78,8 @@ namespace CardCreator.Models {
     }
     void FitToText(TextBlock tb){
             var ft = new FormattedText(tb.Text ?? "", CultureInfo.CurrentCulture, tb.FlowDirection, new Typeface(tb.FontFamily, tb.FontStyle, tb.FontWeight, tb.FontStretch), tb.FontSize, tb.Foreground, VisualTreeHelper.GetDpi(tb).PixelsPerDip);
-            var w = ft.Width; var h = ft.Height;
-            tb.Width = w; tb.Height = h;
+            var w = ft.WidthIncludingTrailingWhitespace; var h = ft.Height;
+            //tb.Width = w; tb.Height = h;
             if (tb.Parent is Grid g) { g.Width = w; g.Height = h; }
         }
     public string Text { get=> (Element as TextBlock)?.Text ?? ""; set{ if(Element is TextBlock tb){ tb.Text=value; FitToText(tb); OnPropertyChanged(); } } }
