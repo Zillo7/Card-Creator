@@ -23,6 +23,7 @@ public class CanvasSizeViewModel : INotifyPropertyChanged
 {
     private double _widthDip;
     private double _heightDip;
+    private bool _updatingPreset;
 
     public CanvasSizeViewModel(double widthDip, double heightDip)
     {
@@ -51,8 +52,10 @@ public class CanvasSizeViewModel : INotifyPropertyChanged
                 OnPropertyChanged();
                 if (value != null)
                 {
+                    _updatingPreset = true;
                     WidthInch = value.WidthInch;
                     HeightInch = value.HeightInch;
+                    _updatingPreset = false;
                 }
             }
         }
@@ -61,12 +64,33 @@ public class CanvasSizeViewModel : INotifyPropertyChanged
     public double WidthDip
     {
         get => _widthDip;
-        set { _widthDip = value; OnPropertyChanged(); OnPropertyChanged(nameof(WidthInch)); }
+        set
+        {
+            if (_widthDip != value)
+            {
+                _widthDip = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(WidthInch));
+                if (!_updatingPreset)
+                    SelectedPreset = null;
+            }
+        }
     }
+
     public double HeightDip
     {
         get => _heightDip;
-        set { _heightDip = value; OnPropertyChanged(); OnPropertyChanged(nameof(HeightInch)); }
+        set
+        {
+            if (_heightDip != value)
+            {
+                _heightDip = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HeightInch));
+                if (!_updatingPreset)
+                    SelectedPreset = null;
+            }
+        }
     }
 
     public double WidthInch
