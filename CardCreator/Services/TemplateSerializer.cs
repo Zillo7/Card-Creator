@@ -34,7 +34,7 @@ namespace CardCreator.Services {
       File.WriteAllText(path, JsonSerializer.Serialize(model, Options));
     }
 
-    public static void LoadFromJson(Canvas canvas, string path){
+    public static TemplateModel LoadFromJson(Canvas canvas, string path){
       var json=File.ReadAllText(path);
       var model=JsonSerializer.Deserialize<TemplateModel>(json,Options) ?? new TemplateModel();
       canvas.Children.Clear();
@@ -63,6 +63,7 @@ namespace CardCreator.Services {
         Canvas.SetLeft(container,item.X); Canvas.SetTop(container,item.Y);
         canvas.Children.Add(container);
       }
+      return model;
     }
 
     public static void ExportToXaml(Canvas canvas, string path, double cardW, double cardH){
