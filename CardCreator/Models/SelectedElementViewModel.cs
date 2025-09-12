@@ -169,16 +169,25 @@ namespace CardCreator.Models {
       }
     }
     public TextAlignment TextAlignment { get => (Element as TextBlock)?.TextAlignment ?? TextAlignment.Left; set { if (Element is TextBlock tb) { tb.TextAlignment = value; OnPropertyChanged(); } } }
-    public string ForegroundHex {
-      get{
-        if(Element is TextBlock tb && tb.Foreground is SolidColorBrush scb) return $"#{scb.Color.R:X2}{scb.Color.G:X2}{scb.Color.B:X2}";
-        return "#000000";
+    public Color ForegroundColor {
+      get {
+        if (Element is TextBlock tb && tb.Foreground is SolidColorBrush scb) return scb.Color;
+        return Colors.Black;
       }
-      set{
-        if(Element is TextBlock tb){
-          try{ tb.Foreground=new SolidColorBrush((Color)ColorConverter.ConvertFromString(value)); }catch{}
+      set {
+        if (Element is TextBlock tb) {
+          tb.Foreground = new SolidColorBrush(value);
           OnPropertyChanged();
+          OnPropertyChanged(nameof(ForegroundHex));
+          OnPropertyChanged(nameof(ForegroundBrush));
         }
+      }
+    }
+    public SolidColorBrush ForegroundBrush => new SolidColorBrush(ForegroundColor);
+    public string ForegroundHex {
+      get => $"#{ForegroundColor.R:X2}{ForegroundColor.G:X2}{ForegroundColor.B:X2}";
+      set {
+        try { ForegroundColor = (Color)ColorConverter.ConvertFromString(value); } catch {}
       }
     }
     public bool IsHidden {
