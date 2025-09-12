@@ -132,6 +132,7 @@ namespace CardCreator.Models {
         }
       }
     }
+    public void NotifyTextChanged() => OnPropertyChanged(nameof(Text));
     public double FontSize { get=> (Element as RichTextBox)?.FontSize ?? 16; set{ if(Element is RichTextBox tb){ tb.FontSize=value; OnPropertyChanged(); } } }
 
     public IEnumerable<FontFamily> FontFamilies { get; } = Fonts.SystemFontFamilies.OrderBy(f => f.Source);

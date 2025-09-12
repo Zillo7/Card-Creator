@@ -568,10 +568,12 @@ public class MainViewModel : INotifyPropertyChanged
         container.Children.Add(MakeThumb(Cursors.SizeNWSE, HorizontalAlignment.Right, VerticalAlignment.Bottom, 1, 1));
     }
 
-    private Grid CreateContainer(FrameworkElement inner, double x, double y, double w, double h, bool useSnap = true)
-    {
-        var container = new Grid { Background = Brushes.Transparent, Width = w, Height = h };
+      private Grid CreateContainer(FrameworkElement inner, double x, double y, double w, double h, bool useSnap = true)
+      {
+          var container = new Grid { Background = Brushes.Transparent, Width = w, Height = h };
         container.Children.Add(inner);
+        if (inner is RichTextBox rtb)
+            rtb.TextChanged += CanvasRichTextBox_TextChanged;
         AttachContainerChrome(container);
         if (useSnap && SnapEnabled)
         {
@@ -581,6 +583,12 @@ public class MainViewModel : INotifyPropertyChanged
         Canvas.SetLeft(container, x);
         Canvas.SetTop(container, y);
         return container;
+      }
+
+    private void CanvasRichTextBox_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (Inspector.Element == sender)
+            Inspector.NotifyTextChanged();
     }
 
     private void ResizeFromCorner(Grid container, DragDeltaEventArgs e, int xDir, int yDir)
