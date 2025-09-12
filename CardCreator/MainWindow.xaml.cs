@@ -865,6 +865,7 @@ public class MainViewModel : INotifyPropertyChanged
     private CardField CreateFieldFromElement(FrameworkElement el)
     {
         var field = new CardField();
+        field.Hidden = el.Visibility != Visibility.Visible;
         if (el is TextBlock tb)
         {
             field.Text = tb.Text;
@@ -888,6 +889,12 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void ApplyFieldToElement(FrameworkElement el, CardField field)
     {
+        if (field.Hidden.HasValue)
+        {
+            el.Visibility = field.Hidden.Value ? Visibility.Hidden : Visibility.Visible;
+            if (el.Parent is Grid g && el is Image)
+                g.Background = field.Hidden.Value ? Brushes.Transparent : Brushes.White;
+        }
         if (el is TextBlock tb)
         {
             if (field.Text != null)
@@ -976,10 +983,12 @@ public class MainViewModel : INotifyPropertyChanged
                 headers.Add($"{c.name}.FontStyle");
                 headers.Add($"{c.name}.TextAlignment");
                 headers.Add($"{c.name}.Foreground");
+                headers.Add($"{c.name}.Hidden");
             }
             else if (c.type == "Image")
             {
                 headers.Add($"{c.name}.Source");
+                headers.Add($"{c.name}.Hidden");
             }
         }
         var sb = new StringBuilder();
@@ -998,10 +1007,12 @@ public class MainViewModel : INotifyPropertyChanged
                     values.Add(CsvEscape(field?.FontStyle));
                     values.Add(CsvEscape(field?.TextAlignment));
                     values.Add(CsvEscape(field?.Foreground));
+                    values.Add(CsvEscape(field?.Hidden?.ToString()));
                 }
                 else if (c.type == "Image")
                 {
                     values.Add(CsvEscape(field?.Source));
+                    values.Add(CsvEscape(field?.Hidden?.ToString()));
                 }
             }
             sb.AppendLine(string.Join(",", values));
@@ -1068,6 +1079,10 @@ public class MainViewModel : INotifyPropertyChanged
                     break;
                 case "Source":
                     field.Source = val;
+                    break;
+                case "Hidden":
+                    if (bool.TryParse(val, out var hid))
+                        field.Hidden = hid;
                     break;
                 }
             }
@@ -1161,11 +1176,10 @@ public class MainViewModel : INotifyPropertyChanged
         case nameof(SelectedElementViewModel.FontFamily):
         case nameof(SelectedElementViewModel.FontStyleOption):
         case nameof(SelectedElementViewModel.TextAlignment):
-        case nameof(SelectedElementViewModel.ForegroundHex):
-            SelectedCard.Fields[name] = CreateFieldFromElement(Inspector.Element);
-            break;
+        case nameof(SelectedElementViewModel.ForegroundColor):
         case nameof(SelectedElementViewModel.ImageSourcePath):
         case nameof(SelectedElementViewModel.ImageStretch):
+        case nameof(SelectedElementViewModel.IsHidden):
             SelectedCard.Fields[name] = CreateFieldFromElement(Inspector.Element);
             break;
         case nameof(SelectedElementViewModel.ControlName):
