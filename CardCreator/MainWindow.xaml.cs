@@ -28,6 +28,7 @@ namespace CardCreator
 public partial class MainWindow : Window
 {
     public MainViewModel VM => (MainViewModel)DataContext;
+    private bool _updatingInspector;
     public MainWindow()
     {
         Resources["NullToBoolInverse"] = new NullToBoolInverseConverter();
@@ -35,6 +36,8 @@ public partial class MainWindow : Window
         VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee);
         Loaded += (_, __) => UpdateRulerOrigins();
         CardCanvas.SizeChanged += (_, __) => UpdateRulerOrigins();
+        VM.Inspector.PropertyChanged += Inspector_PropertyChanged;
+        InspectorRtb.Document = VM.Inspector.Document;
     }
     private void CardCanvas_MouseLeftButtonDown(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftDown(e);
     private void CardCanvas_MouseMove(object s, MouseEventArgs e)
@@ -51,6 +54,22 @@ public partial class MainWindow : Window
         RulerH.Marker = double.NaN;
         RulerV.Marker = double.NaN;
         MarkerReadout.Text = string.Empty;
+    }
+
+    private void Inspector_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(SelectedElementViewModel.Document))
+        {
+            _updatingInspector = true;
+            InspectorRtb.Document = VM.Inspector.Document;
+            _updatingInspector = false;
+        }
+    }
+
+    private void InspectorRtb_TextChanged(object s, TextChangedEventArgs e)
+    {
+        if (_updatingInspector) return;
+        VM.Inspector.Document = InspectorRtb.Document;
     }
 
     private void UpdateRulerOrigins()

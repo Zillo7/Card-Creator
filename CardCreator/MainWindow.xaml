@@ -181,7 +181,7 @@
                                         <ColumnDefinition/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="Text" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-                                    <RichTextBox Document="{Binding Document}" Grid.Row="0" Grid.Column="1" AcceptsReturn="True"/>
+                                    <RichTextBox x:Name="InspectorRtb" Grid.Row="0" Grid.Column="1" AcceptsReturn="True" TextChanged="InspectorRtb_TextChanged"/>
                                     <TextBlock Text="Font Size" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
                                     <TextBox Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="1" Grid.Column="1"/>
                                     <TextBlock Text="Font Family" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
