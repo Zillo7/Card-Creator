@@ -31,8 +31,19 @@ public partial class MainWindow : Window
         VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee);
     }
     private void CardCanvas_MouseLeftButtonDown(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftDown(e);
-    private void CardCanvas_MouseMove(object s, MouseEventArgs e) => VM.OnCanvasMouseMove(e);
+    private void CardCanvas_MouseMove(object s, MouseEventArgs e)
+    {
+        VM.OnCanvasMouseMove(e);
+        var p = e.GetPosition(CardCanvas);
+        RulerH.Marker = p.X;
+        RulerV.Marker = p.Y;
+    }
     private void CardCanvas_MouseLeftButtonUp(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftUp(e);
+    private void CardCanvas_MouseLeave(object s, MouseEventArgs e)
+    {
+        RulerH.Marker = double.NaN;
+        RulerV.Marker = double.NaN;
+    }
     private void BrowseImage_Click(object s, RoutedEventArgs e)
     {
         if (!VM.HasSelection || VM.SingleSelectedInner is not Image)
@@ -142,6 +153,17 @@ public class MainViewModel : INotifyPropertyChanged
         get => _guidelinesEnabled;
         set {
             _guidelinesEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private MeasurementUnit _units = MeasurementUnit.Inches;
+    public MeasurementUnit Units
+    {
+        get => _units;
+        set
+        {
+            _units = value;
             OnPropertyChanged();
         }
     }
