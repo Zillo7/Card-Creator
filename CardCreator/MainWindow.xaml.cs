@@ -16,6 +16,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Globalization;
 using WinForms = System.Windows.Forms;
 using IOPath = System.IO.Path;
 
@@ -29,10 +30,52 @@ public partial class MainWindow : Window
         Resources["NullToBoolInverse"] = new NullToBoolInverseConverter();
         InitializeComponent();
         VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee);
+        Loaded += (_, __) => UpdateRulerOrigins();
+        CardCanvas.SizeChanged += (_, __) => UpdateRulerOrigins();
     }
     private void CardCanvas_MouseLeftButtonDown(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftDown(e);
-    private void CardCanvas_MouseMove(object s, MouseEventArgs e) => VM.OnCanvasMouseMove(e);
+    private void CardCanvas_MouseMove(object s, MouseEventArgs e)
+    {
+        VM.OnCanvasMouseMove(e);
+        var p = e.GetPosition(CardCanvas);
+        RulerH.Marker = p.X;
+        RulerV.Marker = p.Y;
+        UpdateMarkerReadout(p);
+    }
     private void CardCanvas_MouseLeftButtonUp(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftUp(e);
+    private void CardCanvas_MouseLeave(object s, MouseEventArgs e)
+    {
+        RulerH.Marker = double.NaN;
+        RulerV.Marker = double.NaN;
+        MarkerReadout.Text = string.Empty;
+    }
+
+    private void UpdateRulerOrigins()
+    {
+        var originInH = CardCanvas.TranslatePoint(new Point(0, 0), RulerH);
+        var originInV = CardCanvas.TranslatePoint(new Point(0, 0), RulerV);
+        RulerH.Origin = originInH.X;
+        RulerV.Origin = originInV.Y;
+    }
+    private void UpdateMarkerReadout(Point p)
+    {
+        var unit = UnitSuffix();
+        MarkerReadout.Text = string.Format(CultureInfo.InvariantCulture,
+            "X: {0:0.##}{2} Y: {1:0.##}{2}",
+            DiuToUnits(p.X), DiuToUnits(p.Y), unit);
+    }
+    private double DiuToUnits(double value) => VM.Units switch
+    {
+        MeasurementUnit.Inches => value / 96.0,
+        MeasurementUnit.Millimeters => value * 25.4 / 96.0,
+        _ => value,
+    };
+    private string UnitSuffix() => VM.Units switch
+    {
+        MeasurementUnit.Inches => " in",
+        MeasurementUnit.Millimeters => " mm",
+        _ => " px",
+    };
     private void BrowseImage_Click(object s, RoutedEventArgs e)
     {
         if (!VM.HasSelection || VM.SingleSelectedInner is not Image)
@@ -142,6 +185,17 @@ public class MainViewModel : INotifyPropertyChanged
         get => _guidelinesEnabled;
         set {
             _guidelinesEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private MeasurementUnit _units = MeasurementUnit.Inches;
+    public MeasurementUnit Units
+    {
+        get => _units;
+        set
+        {
+            _units = value;
             OnPropertyChanged();
         }
     }
