@@ -12,11 +12,13 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Globalization;
+using System.Windows.Markup;
 using WinForms = System.Windows.Forms;
 using DrawingColor = System.Drawing.Color;
 using IOPath = System.IO.Path;
@@ -87,7 +89,7 @@ public partial class MainWindow : Window
     }
     private void PickColor_Click(object s, RoutedEventArgs e)
     {
-        if (VM.Inspector.Element is not TextBlock)
+        if (VM.Inspector.Element is not RichTextBox)
             return;
         var dlg = new WinForms.ColorDialog();
         var c = VM.Inspector.ForegroundColor;
@@ -457,8 +459,9 @@ public class MainViewModel : INotifyPropertyChanged
     {
         if (_canvas == null)
             return;
-        var tb = new TextBlock { Text = "Text", FontSize = 28, Foreground = Brushes.Black,
-                                 RenderTransformOrigin = new Point(0.5, 0.5), TextWrapping = TextWrapping.Wrap };
+        var tb = new RichTextBox { FontSize = 28, Foreground = Brushes.Black,
+                                 RenderTransformOrigin = new Point(0.5, 0.5), IsHitTestVisible = false };
+        tb.Document = new FlowDocument(new Paragraph(new Run("Text")));
         var container = CreateContainer(tb, 60, 60, 180, 60);
         tb.Width = 180;
         tb.Height = 60;
@@ -880,15 +883,15 @@ public class MainViewModel : INotifyPropertyChanged
     {
         var field = new CardField();
         field.Hidden = el.Visibility != Visibility.Visible;
-        if (el is TextBlock tb)
+        if (el is RichTextBox tb)
         {
-            field.Text = tb.Text;
+            try { field.Text = XamlWriter.Save(tb.Document); } catch { field.Text = string.Empty; }
             field.FontSize = tb.FontSize;
             field.FontFamily = tb.FontFamily.Source;
             bool bold = tb.FontWeight == FontWeights.Bold;
             bool italic = tb.FontStyle == FontStyles.Italic;
             field.FontStyle = bold && italic ? "Bold Italic" : (bold ? "Bold" : (italic ? "Italic" : "None"));
-            field.TextAlignment = tb.TextAlignment.ToString();
+            field.TextAlignment = tb.Document.TextAlignment.ToString();
             if (tb.Foreground is SolidColorBrush scb)
                 field.Foreground = $"#{scb.Color.R:X2}{scb.Color.G:X2}{scb.Color.B:X2}";
         }
@@ -909,10 +912,13 @@ public class MainViewModel : INotifyPropertyChanged
             if (el.Parent is Grid g && el is Image)
                 g.Background = field.Hidden.Value ? Brushes.Transparent : Brushes.White;
         }
-        if (el is TextBlock tb)
+        if (el is RichTextBox tb)
         {
             if (field.Text != null)
-                tb.Text = field.Text;
+            {
+                try { tb.Document = (FlowDocument)XamlReader.Parse(field.Text); }
+                catch { tb.Document = new FlowDocument(new Paragraph(new Run(field.Text))); }
+            }
             if (field.FontSize.HasValue)
                 tb.FontSize = field.FontSize.Value;
             if (field.FontFamily != null)
@@ -946,7 +952,7 @@ public class MainViewModel : INotifyPropertyChanged
                 }
             }
             if (field.TextAlignment != null && Enum.TryParse<TextAlignment>(field.TextAlignment, out var ta))
-                tb.TextAlignment = ta;
+                tb.Document.TextAlignment = ta;
             if (field.Foreground != null)
                 try
                 {
@@ -1119,7 +1125,7 @@ public class MainViewModel : INotifyPropertyChanged
                 continue;
             if (inner.Tag is not string name || string.IsNullOrWhiteSpace(name))
                 continue;
-            var type = inner is TextBlock ? "Text" : inner is Image ? "Image" : "";
+            var type = inner is RichTextBox ? "Text" : inner is Image ? "Image" : "";
             if (type != "")
                 list.Add((name, type));
         }
