@@ -47,6 +47,7 @@ namespace CardCreator
             get => (double)GetValue(OriginProperty);
             set => SetValue(OriginProperty, value);
         }
+        
         private double UnitsToDiu()
         {
             return Units switch
