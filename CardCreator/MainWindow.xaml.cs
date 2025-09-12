@@ -870,7 +870,10 @@ public class MainViewModel : INotifyPropertyChanged
                 ApplyFieldToElement(inner, field);
         }
         if (_selected.Count == 1)
+        {
+            Inspector.SetElement((FrameworkElement)_selected[0].Children[0]);
             Inspector.RefreshPosition();
+        }
     }
 
     private CardField CreateFieldFromElement(FrameworkElement el)
@@ -1018,12 +1021,12 @@ public class MainViewModel : INotifyPropertyChanged
                     values.Add(CsvEscape(field?.FontStyle));
                     values.Add(CsvEscape(field?.TextAlignment));
                     values.Add(CsvEscape(field?.Foreground));
-                    values.Add(CsvEscape(field?.Hidden?.ToString()));
+                    values.Add(CsvEscape((field?.Hidden ?? false).ToString()));
                 }
                 else if (c.type == "Image")
                 {
                     values.Add(CsvEscape(field?.Source));
-                    values.Add(CsvEscape(field?.Hidden?.ToString()));
+                    values.Add(CsvEscape((field?.Hidden ?? false).ToString()));
                 }
             }
             sb.AppendLine(string.Join(",", values));
