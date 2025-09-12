@@ -1,9 +1,7 @@
-<Window x:Class="CardCreator.MainWindow"
+ <Window x:Class="CardCreator.MainWindow"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
- xmlns:sys="clr-namespace:System;assembly=mscorlib"
  xmlns:local="clr-namespace:CardCreator"
- xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
  Title="Card Creator" Height="820" Width="1320"
  Background="#FFF9F9FB" KeyDown="Window_KeyDown">
     <Window.Resources>
@@ -86,6 +84,31 @@
                 <MenuItem Header="Show _Guidelines" IsCheckable="True" Visibility="Collapsed" IsChecked="{Binding GuidelinesEnabled}"/>
             </MenuItem>
         </Menu>
+        <ToolBar DockPanel.Dock="Top" DataContext="{Binding Inspector}" IsEnabled="{Binding IsText}">
+            <ComboBox Width="170" ItemsSource="{Binding FontFamilies}" SelectedItem="{Binding FontFamily}"/>
+            <ComboBox Width="60" Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged}"/>
+            <Separator/>
+            <Button Command="EditingCommands.ToggleBold" CommandTarget="{Binding Element}" FontWeight="Bold" Content="B"/>
+            <Button Command="EditingCommands.ToggleItalic" CommandTarget="{Binding Element}" FontStyle="Italic" Content="I"/>
+            <Button Command="EditingCommands.ToggleUnderline" CommandTarget="{Binding Element}">
+                <TextBlock Text="U" TextDecorations="Underline"/>
+            </Button>
+            <Button Command="EditingCommands.ToggleStrikethrough" CommandTarget="{Binding Element}">
+                <TextBlock Text="abc" TextDecorations="Strikethrough"/>
+            </Button>
+            <Separator/>
+            <Button Click="PickColor_Click" ToolTip="Text Color">
+                <Border Width="16" Height="16" Background="{Binding ForegroundBrush}" BorderBrush="Black" BorderThickness="1"/>
+            </Button>
+            <Separator/>
+            <Button Command="EditingCommands.AlignLeft" CommandTarget="{Binding Element}" Content="L"/>
+            <Button Command="EditingCommands.AlignCenter" CommandTarget="{Binding Element}" Content="C"/>
+            <Button Command="EditingCommands.AlignRight" CommandTarget="{Binding Element}" Content="R"/>
+            <Button Command="EditingCommands.AlignJustify" CommandTarget="{Binding Element}" Content="J"/>
+            <Separator/>
+            <Button Command="EditingCommands.ToggleBullets" CommandTarget="{Binding Element}" Content="•"/>
+            <Button Command="EditingCommands.ToggleNumbering" CommandTarget="{Binding Element}" Content="1."/>
+        </ToolBar>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
@@ -167,53 +190,7 @@
                                     <TextBlock Text="Hidden" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center"/>
                                     <CheckBox IsChecked="{Binding IsHidden, UpdateSourceTrigger=PropertyChanged}" Grid.Row="6" Grid.Column="1" IsEnabled="{Binding Element, Converter={StaticResource NullToBoolInverse}}"/>
                                 </Grid>
-                                <Grid Visibility="{Binding IsText, Converter={StaticResource BoolToVis}}" Margin="0,10,0,0">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="110"/>
-                                        <ColumnDefinition/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Text" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-                                    <RichTextBox x:Name="InspectorRtb" Grid.Row="0" Grid.Column="1" AcceptsReturn="True" TextChanged="InspectorRtb_TextChanged"/>
-                                    <TextBlock Text="Font Size" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
-                                    <TextBox Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="1" Grid.Column="1"/>
-                                    <TextBlock Text="Font Family" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
-                                    <ComboBox ItemsSource="{Binding FontFamilies}" SelectedItem="{Binding FontFamily, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="1">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding Source}" FontFamily="{Binding}"/>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                    <TextBlock Text="Font Style" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
-                                    <ComboBox SelectedItem="{Binding FontStyleOption, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="1">
-                                        <sys:String>None</sys:String>
-                                        <sys:String>Italic</sys:String>
-                                        <sys:String>Bold</sys:String>
-                                        <sys:String>Bold Italic</sys:String>
-                                    </ComboBox>
-                                    <TextBlock Text="Text Align" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
-                                    <ComboBox SelectedItem="{Binding TextAlignment, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4" Grid.Column="1">
-                                        <TextAlignment>Left</TextAlignment>
-                                        <TextAlignment>Center</TextAlignment>
-                                        <TextAlignment>Right</TextAlignment>
-                                        <TextAlignment>Justify</TextAlignment>
-                                    </ComboBox>
-                                    <TextBlock Text="Color" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
-                                    <Button Grid.Row="5" Grid.Column="1" Width="120" Click="PickColor_Click">
-                                        <StackPanel Orientation="Horizontal">
-                                            <Border Width="16" Height="16" Background="{Binding ForegroundBrush}" BorderBrush="Black" BorderThickness="1"/>
-                                            <TextBlock Text="{Binding ForegroundHex}" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Button>
-                                </Grid>
+                                
                                 <Grid Visibility="{Binding IsImage, Converter={StaticResource BoolToVis}}" Margin="0,10,0,0">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
