@@ -119,6 +119,27 @@ public partial class MainWindow : Window
             has ? null : TextDecorations.Strikethrough);
         rtb.Focus();
     }
+    private void InsertImage_Click(object s, RoutedEventArgs e)
+    {
+        if (VM.Inspector.Element is not RichTextBox rtb)
+            return;
+        var dlg = new OpenFileDialog { Filter = "Images|*.jpg;*.jpeg;*.png" };
+        if (dlg.ShowDialog() != true)
+            return;
+        try
+        {
+            var bi = new BitmapImage();
+            bi.BeginInit();
+            bi.UriSource = new Uri(dlg.FileName);
+            bi.CacheOption = BitmapCacheOption.OnLoad;
+            bi.EndInit();
+            bi.Freeze();
+            var img = new Image { Source = bi };
+            _ = new InlineUIContainer(img, rtb.CaretPosition);
+            rtb.Focus();
+        }
+        catch { }
+    }
     private void Window_KeyDown(object s, KeyEventArgs e) => VM.OnKeyDown(e);
 }
 

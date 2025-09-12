@@ -114,6 +114,10 @@
             <Separator/>
             <Button Command="EditingCommands.ToggleBullets" CommandTarget="{Binding Element}" Content="•"/>
             <Button Command="EditingCommands.ToggleNumbering" CommandTarget="{Binding Element}" Content="1."/>
+            <Separator/>
+            <Button Click="InsertImage_Click">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8B9;" FontSize="16"/>
+            </Button>
         </ToolBar>
         <Grid>
             <Grid.ColumnDefinitions>
