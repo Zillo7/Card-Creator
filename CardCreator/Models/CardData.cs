@@ -15,5 +15,6 @@ namespace CardCreator.Models {
     public string? Foreground {get;set;}
     public string? Source {get;set;}
     public string? Stretch {get;set;}
+    public bool? Hidden {get;set;}
   }
 }
