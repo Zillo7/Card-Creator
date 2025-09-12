@@ -47,7 +47,7 @@ namespace CardCreator
             get => (double)GetValue(OriginProperty);
             set => SetValue(OriginProperty, value);
         }
-
+        
         private double UnitsToDiu()
         {
             return Units switch
@@ -78,7 +78,6 @@ namespace CardCreator
             {
                 double pos = Origin + u * scale + 0.5; // crisp lines
                 if (pos < 0 || pos > length) continue;
-
                 Point p1, p2;
                 if (Orientation == Orientation.Horizontal)
                 {
