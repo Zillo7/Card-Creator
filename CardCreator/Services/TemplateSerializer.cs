@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -26,8 +27,15 @@ namespace CardCreator.Services {
           Hidden=inner.Visibility!=Visibility.Visible,
           ControlName=inner.Tag is string t && !string.IsNullOrWhiteSpace(t) ? t : null
         };
-        if(inner is TextBlock tb){
-          item.Type="Text"; item.Text=tb.Text; item.FontSize=tb.FontSize; item.Bold=tb.FontWeight==FontWeights.Bold;
+        if(inner is RichTextBox rtb){
+          item.Type="Text";
+          try{ item.Text=XamlWriter.Save(rtb.Document); }catch{ item.Text=""; }
+          item.FontSize=rtb.FontSize; item.Bold=rtb.FontWeight==FontWeights.Bold;
+          item.Italic=rtb.FontStyle==FontStyles.Italic; item.TextAlignment=rtb.Document.TextAlignment.ToString();
+          item.FontFamily=rtb.FontFamily.Source;
+          if(rtb.Foreground is SolidColorBrush scb) item.ForegroundHex=$"#{scb.Color.R:X2}{scb.Color.G:X2}{scb.Color.B:X2}";
+        } else if(inner is TextBlock tb){
+          item.Type="Text"; item.Text=XamlWriter.Save(new FlowDocument(new Paragraph(new Run(tb.Text??"")))); item.FontSize=tb.FontSize; item.Bold=tb.FontWeight==FontWeights.Bold;
           item.Italic=tb.FontStyle==FontStyles.Italic; item.TextAlignment=tb.TextAlignment.ToString();
           item.FontFamily=tb.FontFamily.Source;
           if(tb.Foreground is SolidColorBrush scb) item.ForegroundHex=$"#{scb.Color.R:X2}{scb.Color.G:X2}{scb.Color.B:X2}";
@@ -57,14 +65,18 @@ namespace CardCreator.Services {
           if(item.Hidden==true) img.Visibility=Visibility.Hidden;
           inner=img;
         } else {
-          var tb=new TextBlock{ Text=item.Text??"Text", FontSize=item.FontSize??28 };
-          if(item.Bold==true) tb.FontWeight=FontWeights.Bold;
-          if(item.Italic==true) tb.FontStyle=FontStyles.Italic;
-          if(!string.IsNullOrWhiteSpace(item.FontFamily)) try{ tb.FontFamily=new FontFamily(item.FontFamily); }catch{}
-          if(!string.IsNullOrWhiteSpace(item.TextAlignment) && Enum.TryParse<TextAlignment>(item.TextAlignment, out var ta)) tb.TextAlignment=ta;
-          if(!string.IsNullOrWhiteSpace(item.ForegroundHex)){ try{ tb.Foreground=new SolidColorBrush((Color)ColorConverter.ConvertFromString(item.ForegroundHex!)); }catch{} }
-          if(item.Hidden==true) tb.Visibility=Visibility.Hidden;
-          inner=tb;
+          var rtb=new RichTextBox{ FontSize=item.FontSize??28, IsHitTestVisible=false };
+          if(!string.IsNullOrWhiteSpace(item.Text)){
+            try{ rtb.Document=(FlowDocument)XamlReader.Parse(item.Text); }
+            catch{ rtb.Document=new FlowDocument(new Paragraph(new Run(item.Text))); }
+          }
+          if(item.Bold==true) rtb.FontWeight=FontWeights.Bold;
+          if(item.Italic==true) rtb.FontStyle=FontStyles.Italic;
+          if(!string.IsNullOrWhiteSpace(item.FontFamily)) try{ rtb.FontFamily=new FontFamily(item.FontFamily); }catch{}
+          if(!string.IsNullOrWhiteSpace(item.TextAlignment) && Enum.TryParse<TextAlignment>(item.TextAlignment, out var ta)) rtb.Document.TextAlignment=ta;
+          if(!string.IsNullOrWhiteSpace(item.ForegroundHex)){ try{ rtb.Foreground=new SolidColorBrush((Color)ColorConverter.ConvertFromString(item.ForegroundHex!)); }catch{} }
+          if(item.Hidden==true) rtb.Visibility=Visibility.Hidden;
+          inner=rtb;
         }
         if(!string.IsNullOrWhiteSpace(item.ControlName)) inner.Name=item.ControlName;
         inner.RenderTransformOrigin=new Point(0.5,0.5);
@@ -84,8 +96,10 @@ namespace CardCreator.Services {
       var model=new TemplateModel();
       if(obj!=null){
         canvas.Children.Clear();
-        foreach(UIElement child in obj.Children)
+        foreach(UIElement child in obj.Children){
+          if(child is RichTextBox rtb) rtb.IsHitTestVisible=false;
           canvas.Children.Add(child);
+        }
         model.CardWidth=obj.Width;
         model.CardHeight=obj.Height;
         if(obj.Tag is string tag){
@@ -108,7 +122,22 @@ namespace CardCreator.Services {
         double x=Canvas.GetLeft(g), y=Canvas.GetTop(g);
         string tagAttr="";
         if(inner.Tag is string tag && !string.IsNullOrWhiteSpace(tag)) tagAttr=" Tag=\""+XmlEscape(tag)+"\"";
-        if(inner is TextBlock tb){
+        if(inner is RichTextBox rtb){
+          string color="#000000";
+          if(rtb.Foreground is SolidColorBrush scb) color=$"#{scb.Color.R:X2}{scb.Color.G:X2}{scb.Color.B:X2}";
+          var attrs=" FontSize=\""+rtb.FontSize+"\""+
+            " FontFamily=\""+XmlEscape(rtb.FontFamily.Source)+"\""+
+            " FontWeight=\""+(rtb.FontWeight==FontWeights.Bold?"Bold":"Normal")+"\""+
+            " FontStyle=\""+(rtb.FontStyle==FontStyles.Italic?"Italic":"Normal")+"\""+
+            " Foreground=\""+color+"\""+
+            " Width=\""+g.Width+"\" Height=\""+g.Height+"\" Canvas.Left=\""+x+"\" Canvas.Top=\""+y+"\" IsHitTestVisible=\"False\""+tagAttr;
+          if(rtb.Visibility!=Visibility.Visible) attrs+=" Visibility=\""+rtb.Visibility+"\"";
+          sb.AppendLine("  <RichTextBox"+attrs+">");
+          var angle=GetRotation(inner);
+          if(Math.Abs(angle)>0.001) sb.AppendLine("    <RichTextBox.RenderTransform><RotateTransform Angle=\""+angle+"\"/></RichTextBox.RenderTransform>");
+          try{ sb.AppendLine("    "+XamlWriter.Save(rtb.Document)); }catch{}
+          sb.AppendLine("  </RichTextBox>");
+        } else if(inner is TextBlock tb){
           string color="#000000";
           if(tb.Foreground is SolidColorBrush scb) color=$"#{scb.Color.R:X2}{scb.Color.G:X2}{scb.Color.B:X2}";
           var attrs=" Text=\""+XmlEscape(tb.Text)+"\""+

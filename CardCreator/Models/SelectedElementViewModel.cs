@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 
 namespace CardCreator.Models {
@@ -13,7 +14,7 @@ namespace CardCreator.Models {
     public FrameworkElement? Element {get; private set;}
     public FrameworkElement? Container {get; private set;}
     public string? ElementType {get; private set;}
-    public bool IsText => Element is TextBlock;
+    public bool IsText => Element is RichTextBox;
     public bool IsImage => Element is Image;
     public void SetElement(FrameworkElement? element){ Element=element; Container=element?.Parent as FrameworkElement; ElementType=element?.GetType().Name; OnPropertyChanged(string.Empty); }
     public string ControlName {
@@ -38,9 +39,8 @@ namespace CardCreator.Models {
       set {
         if (Element != null) {
           Element.Width = value;
-          if (Element is TextBlock tb) {
+          if (Element is RichTextBox tb) {
             if (tb.Parent is Grid g) g.Width = value;
-            //if (double.IsNaN(value)) FitToText(tb);
           }
           OnPropertyChanged();
           OnPropertyChanged(nameof(WidthInput));
@@ -52,9 +52,8 @@ namespace CardCreator.Models {
       set {
         if (Element != null) {
           Element.Height = value;
-          if (Element is TextBlock tb) {
+          if (Element is RichTextBox tb) {
             if (tb.Parent is Grid g) g.Height = value;
-            //if (double.IsNaN(value)) FitToText(tb);
           }
           OnPropertyChanged();
           OnPropertyChanged(nameof(HeightInput));
@@ -84,7 +83,6 @@ namespace CardCreator.Models {
       set {
         if (Element != null) {
           Element.MaxWidth = value;
-          //if (Element is TextBlock tb) { FitToText(tb); }
           OnPropertyChanged();
         }
       }
@@ -94,7 +92,6 @@ namespace CardCreator.Models {
       set {
         if (Element != null) {
           Element.MaxHeight = value;
-          //if (Element is TextBlock tb) { FitToText(tb); }
           OnPropertyChanged();
         }
       }
@@ -116,24 +113,36 @@ namespace CardCreator.Models {
         OnPropertyChanged();
       }
     }
-    void FitToText(TextBlock tb){
-            var ft = new FormattedText(tb.Text ?? "", CultureInfo.CurrentCulture, tb.FlowDirection, new Typeface(tb.FontFamily, tb.FontStyle, tb.FontWeight, tb.FontStretch), tb.FontSize, tb.Foreground, VisualTreeHelper.GetDpi(tb).PixelsPerDip);
-            var w = ft.WidthIncludingTrailingWhitespace; var h = ft.Height;
-            //tb.Width = w; tb.Height = h;
-            if (tb.Parent is Grid g) { g.Width = w; g.Height = h; }
+    public FlowDocument Document {
+      get => (Element as RichTextBox)?.Document ?? new FlowDocument();
+      set { if(Element is RichTextBox rtb){ rtb.Document = value; OnPropertyChanged(); } }
+    }
+    public string Text {
+      get{
+        if(Element is RichTextBox rtb){
+          var range=new TextRange(rtb.Document.ContentStart, rtb.Document.ContentEnd);
+          return range.Text;
         }
-    public string Text { get=> (Element as TextBlock)?.Text ?? ""; set{ if(Element is TextBlock tb){ tb.Text=value; OnPropertyChanged(); } } }
-    public double FontSize { get=> (Element as TextBlock)?.FontSize ?? 16; set{ if(Element is TextBlock tb){ tb.FontSize=value; OnPropertyChanged(); } } }
+        return "";
+      }
+      set{
+        if(Element is RichTextBox rtb){
+          rtb.Document = new FlowDocument(new Paragraph(new Run(value)));
+          OnPropertyChanged();
+        }
+      }
+    }
+    public double FontSize { get=> (Element as RichTextBox)?.FontSize ?? 16; set{ if(Element is RichTextBox tb){ tb.FontSize=value; OnPropertyChanged(); } } }
 
     public IEnumerable<FontFamily> FontFamilies { get; } = Fonts.SystemFontFamilies.OrderBy(f => f.Source);
     public FontFamily FontFamily {
-      get => (Element as TextBlock)?.FontFamily ?? Fonts.SystemFontFamilies.First();
-      set { if (Element is TextBlock tb) { tb.FontFamily = value; OnPropertyChanged(); } }
+      get => (Element as RichTextBox)?.FontFamily ?? Fonts.SystemFontFamilies.First();
+      set { if (Element is RichTextBox tb) { tb.FontFamily = value; OnPropertyChanged(); } }
     }
 
     public string FontStyleOption {
       get {
-        if (Element is TextBlock tb) {
+        if (Element is RichTextBox tb) {
           bool bold = tb.FontWeight == FontWeights.Bold;
           bool italic = tb.FontStyle == FontStyles.Italic;
           if (bold && italic) return "Bold Italic";
@@ -144,7 +153,7 @@ namespace CardCreator.Models {
         return "None";
       }
       set {
-        if (Element is TextBlock tb) {
+        if (Element is RichTextBox tb) {
           switch (value) {
             case "Italic":
               tb.FontStyle = FontStyles.Italic;
@@ -163,19 +172,18 @@ namespace CardCreator.Models {
               tb.FontWeight = FontWeights.Normal;
               break;
           }
-          //FitToText(tb);
           OnPropertyChanged();
         }
       }
     }
-    public TextAlignment TextAlignment { get => (Element as TextBlock)?.TextAlignment ?? TextAlignment.Left; set { if (Element is TextBlock tb) { tb.TextAlignment = value; OnPropertyChanged(); } } }
+    public TextAlignment TextAlignment { get => (Element as RichTextBox)?.Document.TextAlignment ?? TextAlignment.Left; set { if (Element is RichTextBox tb) { tb.Document.TextAlignment = value; OnPropertyChanged(); } } }
     public Color ForegroundColor {
       get {
-        if (Element is TextBlock tb && tb.Foreground is SolidColorBrush scb) return scb.Color;
+        if (Element is RichTextBox tb && tb.Foreground is SolidColorBrush scb) return scb.Color;
         return Colors.Black;
       }
       set {
-        if (Element is TextBlock tb) {
+        if (Element is RichTextBox tb) {
           tb.Foreground = new SolidColorBrush(value);
           OnPropertyChanged();
           OnPropertyChanged(nameof(ForegroundHex));
