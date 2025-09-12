@@ -65,7 +65,7 @@ namespace CardCreator.Services {
           if(item.Hidden==true) img.Visibility=Visibility.Hidden;
           inner=img;
         } else {
-          var rtb=new RichTextBox{ FontSize=item.FontSize??28, IsHitTestVisible=false };
+          var rtb=new RichTextBox{ FontSize=item.FontSize??28 };
           if(!string.IsNullOrWhiteSpace(item.Text)){
             try{ rtb.Document=(FlowDocument)XamlReader.Parse(item.Text); }
             catch{ rtb.Document=new FlowDocument(new Paragraph(new Run(item.Text))); }
@@ -97,7 +97,7 @@ namespace CardCreator.Services {
       if(obj!=null){
         canvas.Children.Clear();
         foreach(UIElement child in obj.Children){
-          if(child is RichTextBox rtb) rtb.IsHitTestVisible=false;
+          if(child is RichTextBox rtb) rtb.IsHitTestVisible=true;
           canvas.Children.Add(child);
         }
         model.CardWidth=obj.Width;
@@ -130,7 +130,7 @@ namespace CardCreator.Services {
             " FontWeight=\""+(rtb.FontWeight==FontWeights.Bold?"Bold":"Normal")+"\""+
             " FontStyle=\""+(rtb.FontStyle==FontStyles.Italic?"Italic":"Normal")+"\""+
             " Foreground=\""+color+"\""+
-            " Width=\""+g.Width+"\" Height=\""+g.Height+"\" Canvas.Left=\""+x+"\" Canvas.Top=\""+y+"\" IsHitTestVisible=\"False\""+tagAttr;
+            " Width=\""+g.Width+"\" Height=\""+g.Height+"\" Canvas.Left=\""+x+"\" Canvas.Top=\""+y+"\""+tagAttr;
           if(rtb.Visibility!=Visibility.Visible) attrs+=" Visibility=\""+rtb.Visibility+"\"";
           sb.AppendLine("  <RichTextBox"+attrs+">");
           var angle=GetRotation(inner);

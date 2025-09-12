@@ -28,7 +28,6 @@ namespace CardCreator
 public partial class MainWindow : Window
 {
     public MainViewModel VM => (MainViewModel)DataContext;
-    private bool _updatingInspector;
     public MainWindow()
     {
         Resources["NullToBoolInverse"] = new NullToBoolInverseConverter();
@@ -36,10 +35,6 @@ public partial class MainWindow : Window
         VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee);
         Loaded += (_, __) => UpdateRulerOrigins();
         CardCanvas.SizeChanged += (_, __) => UpdateRulerOrigins();
-        VM.Inspector.PropertyChanged += Inspector_PropertyChanged;
-        _updatingInspector = true;
-        InspectorRtb.Document = CloneDocument(VM.Inspector.Document);
-        _updatingInspector = false;
     }
     private void CardCanvas_MouseLeftButtonDown(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftDown(e);
     private void CardCanvas_MouseMove(object s, MouseEventArgs e)
@@ -58,36 +53,7 @@ public partial class MainWindow : Window
         MarkerReadout.Text = string.Empty;
     }
 
-    private void Inspector_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (_updatingInspector) return;
-        if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(SelectedElementViewModel.Document))
-        {
-            _updatingInspector = true;
-            InspectorRtb.Document = CloneDocument(VM.Inspector.Document);
-            _updatingInspector = false;
-        }
-    }
-
-    private void InspectorRtb_TextChanged(object s, TextChangedEventArgs e)
-    {
-        if (_updatingInspector) return;
-        _updatingInspector = true;
-        VM.Inspector.Document = CloneDocument(InspectorRtb.Document);
-        _updatingInspector = false;
-    }
-
-    private static FlowDocument CloneDocument(FlowDocument document)
-    {
-        var clone = new FlowDocument();
-        using var stream = new MemoryStream();
-        var range = new TextRange(document.ContentStart, document.ContentEnd);
-        range.Save(stream, DataFormats.XamlPackage);
-        stream.Position = 0;
-        var cloneRange = new TextRange(clone.ContentStart, clone.ContentEnd);
-        cloneRange.Load(stream, DataFormats.XamlPackage);
-        return clone;
-    }
+    
 
     private void UpdateRulerOrigins()
     {
@@ -496,7 +462,7 @@ public class MainViewModel : INotifyPropertyChanged
         if (_canvas == null)
             return;
         var tb = new RichTextBox { FontSize = 28, Foreground = Brushes.Black,
-                                 RenderTransformOrigin = new Point(0.5, 0.5), IsHitTestVisible = false };
+                                 RenderTransformOrigin = new Point(0.5, 0.5) };
         tb.Document = new FlowDocument(new Paragraph(new Run("Text")));
         var container = CreateContainer(tb, 60, 60, 180, 60);
         tb.Width = 180;
