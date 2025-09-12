@@ -18,6 +18,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Globalization;
 using WinForms = System.Windows.Forms;
+using DrawingColor = System.Drawing.Color;
 using IOPath = System.IO.Path;
 
 namespace CardCreator
@@ -83,6 +84,16 @@ public partial class MainWindow : Window
         var dlg = new OpenFileDialog { Filter = "Images|*.png;*.jpg;*.jpeg;*.bmp;*.gif|All files|*.*" };
         if (dlg.ShowDialog() == true)
             VM.Inspector.ImageSourcePath = dlg.FileName;
+    }
+    private void PickColor_Click(object s, RoutedEventArgs e)
+    {
+        if (VM.Inspector.Element is not TextBlock)
+            return;
+        var dlg = new WinForms.ColorDialog();
+        var c = VM.Inspector.ForegroundColor;
+        dlg.Color = DrawingColor.FromArgb(c.A, c.R, c.G, c.B);
+        if (dlg.ShowDialog() == WinForms.DialogResult.OK)
+            VM.Inspector.ForegroundColor = Color.FromArgb(dlg.Color.A, dlg.Color.R, dlg.Color.G, dlg.Color.B);
     }
     private void Window_KeyDown(object s, KeyEventArgs e) => VM.OnKeyDown(e);
 }

@@ -179,9 +179,12 @@ namespace CardCreator.Models {
           tb.Foreground = new SolidColorBrush(value);
           OnPropertyChanged();
           OnPropertyChanged(nameof(ForegroundHex));
+          OnPropertyChanged(nameof(ForegroundBrush));
         }
       }
     }
+    public SolidColorBrush ForegroundBrush => new SolidColorBrush(ForegroundColor);
+
     public string ForegroundHex {
       get => $"#{ForegroundColor.R:X2}{ForegroundColor.G:X2}{ForegroundColor.B:X2}";
       set {
