@@ -8,4 +8,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Xceed.Wpf.Toolkit" Version="4.5.2" />
+  </ItemGroup>
 </Project>
