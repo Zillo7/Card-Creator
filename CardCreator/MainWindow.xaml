@@ -50,13 +50,15 @@
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="_Edit">
-                <MenuItem Header="Align _Left" Command="{Binding AlignLeftCommand}"/>
-                <MenuItem Header="Align _Center" Command="{Binding AlignCenterCommand}"/>
-                <MenuItem Header="Align _Right" Command="{Binding AlignRightCommand}"/>
-                <Separator/>
-                <MenuItem Header="Align _Top" Command="{Binding AlignTopCommand}"/>
-                <MenuItem Header="Align _Middle" Command="{Binding AlignMiddleCommand}"/>
-                <MenuItem Header="Align _Bottom" Command="{Binding AlignBottomCommand}"/>
+                <MenuItem Header="_Align">
+                    <MenuItem Header="Align _Left" Command="{Binding AlignLeftCommand}"/>
+                    <MenuItem Header="Align _Center" Command="{Binding AlignCenterCommand}"/>
+                    <MenuItem Header="Align _Right" Command="{Binding AlignRightCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="Align _Top" Command="{Binding AlignTopCommand}"/>
+                    <MenuItem Header="Align _Middle" Command="{Binding AlignMiddleCommand}"/>
+                    <MenuItem Header="Align _Bottom" Command="{Binding AlignBottomCommand}"/>
+                </MenuItem>
                 <Separator/>
                 <MenuItem Header="Distribute _Horizontally" Command="{Binding DistributeHCommand}"/>
                 <MenuItem Header="Distribute _Vertically" Command="{Binding DistributeVCommand}"/>
@@ -64,7 +66,7 @@
                 <MenuItem Header="_Bring Forward" Command="{Binding BringForwardCommand}"/>
                 <MenuItem Header="_Send Backward" Command="{Binding SendBackwardCommand}"/>
                 <Separator/>
-                <MenuItem Header="Sheet _Settings..." Command="{Binding SheetSettingsCommand}"/>
+                <MenuItem Header="Card && Sheet _Settings..." Command="{Binding SettingsCommand}"/>
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="_Snap" IsCheckable="True" IsChecked="{Binding SnapEnabled}"/>
@@ -75,35 +77,14 @@
                     <MenuItem Header="20" IsCheckable="True" IsChecked="{Binding GridSize, Converter={StaticResource GridSizeToBool}, ConverterParameter=20}"/>
                     <MenuItem Header="25" IsCheckable="True" IsChecked="{Binding GridSize, Converter={StaticResource GridSizeToBool}, ConverterParameter=25}"/>
                 </MenuItem>
-                <MenuItem Header="_Card Size..." Command="{Binding ChangeCardSizeCommand}"/>
             </MenuItem>
         </Menu>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200"/>
                 <ColumnDefinition/>
                 <ColumnDefinition Width="360"/>
             </Grid.ColumnDefinitions>
-            <Border Grid.Column="0" Margin="0,0,12,0" Padding="12" Background="White" BorderBrush="#FFCCD1D8" BorderThickness="1" CornerRadius="12">
-                <StackPanel>
-                    <TextBlock Text="Cards" FontSize="18" FontWeight="Bold" Margin="0,0,0,8"/>
-                    <ListView ItemsSource="{Binding Cards}" SelectedItem="{Binding SelectedCard}">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBox Width="100" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBox Width="40" Margin="6,0,0,0" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button Content="Add" Command="{Binding AddCardCommand}" Width="60"/>
-                        <Button Content="Remove" Command="{Binding RemoveCardCommand}" Width="60" Margin="8,0,0,0"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-            <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="#FFEFF1F4">
+            <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="#FFEFF1F4">
                 <Grid Margin="20">
                     <Border Width="{Binding CardWidth}" Height="{Binding CardHeight}" CornerRadius="24" BorderBrush="#FFCCD1D8" BorderThickness="2" Background="{StaticResource CheckerBrush}">
                         <Canvas x:Name="CardCanvas" Width="{Binding CardWidth}" Height="{Binding CardHeight}" Background="Transparent" Focusable="True"
@@ -117,17 +98,18 @@
                     </Border>
                 </Grid>
             </ScrollViewer>
-            <Border Grid.Column="2" Margin="12,0,0,0" Padding="12" Background="White" BorderBrush="#FFCCD1D8" BorderThickness="1" CornerRadius="12">
-                <StackPanel>
-                    <TextBlock Text="Inspector" FontSize="18" FontWeight="Bold" Margin="0,0,0,8"/>
-                    <ItemsControl ItemsSource="{Binding SelectedItems}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Tag}"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <StackPanel DataContext="{Binding Inspector}" Margin="0,12,0,0">
+            <Border Grid.Column="1" Margin="12,0,0,0" Padding="12" Background="White" BorderBrush="#FFCCD1D8" BorderThickness="1" CornerRadius="12">
+                <TabControl>
+                    <TabItem Header="Inspector">
+                        <StackPanel>
+                            <ItemsControl ItemsSource="{Binding SelectedItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Tag}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <StackPanel DataContext="{Binding Inspector}" Margin="0,12,0,0">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -215,7 +197,27 @@
                             </StackPanel>
                         </Grid>
                     </StackPanel>
-                </StackPanel>
+                        </StackPanel>
+                    </TabItem>
+                    <TabItem Header="Cards">
+                        <StackPanel>
+                            <ListView ItemsSource="{Binding Cards}" SelectedItem="{Binding SelectedCard}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBox Width="100" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+                                            <TextBox Width="40" Margin="6,0,0,0" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="Add" Command="{Binding AddCardCommand}" Width="60"/>
+                                <Button Content="Remove" Command="{Binding RemoveCardCommand}" Width="60" Margin="8,0,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </TabItem>
+                </TabControl>
             </Border>
         </Grid>
     </DockPanel>
