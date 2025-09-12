@@ -29,7 +29,6 @@ public partial class MainWindow : Window
         Resources["NullToBoolInverse"] = new NullToBoolInverseConverter();
         InitializeComponent();
         VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee);
-        VM.AddCard();
     }
     private void CardCanvas_MouseLeftButtonDown(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftDown(e);
     private void CardCanvas_MouseMove(object s, MouseEventArgs e) => VM.OnCanvasMouseMove(e);
@@ -71,14 +70,13 @@ public class MainViewModel : INotifyPropertyChanged
     public RelayCommand DistributeVCommand { get; }
     public RelayCommand BringForwardCommand { get; }
     public RelayCommand SendBackwardCommand { get; }
-    public RelayCommand ChangeCardSizeCommand { get; }
+    public RelayCommand SettingsCommand { get; }
     public RelayCommand AddCardCommand { get; }
     public RelayCommand RemoveCardCommand { get; }
     public RelayCommand SaveCsvCommand { get; }
     public RelayCommand LoadCsvCommand { get; }
     public RelayCommand SaveImagesCommand { get; }
     public RelayCommand SaveSheetsCommand { get; }
-    public RelayCommand SheetSettingsCommand { get; }
 
     public SelectedElementViewModel Inspector { get; } = new();
     private readonly List<Grid> _selected = new();
@@ -193,8 +191,8 @@ public class MainViewModel : INotifyPropertyChanged
         SendBackwardCommand = new RelayCommand(
             _ => ChangeZ(-1),
             _ => _selected.Count >= 1);
-        ChangeCardSizeCommand = new RelayCommand(
-            _ => ChangeCardSize());
+        SettingsCommand = new RelayCommand(
+            _ => ChangeSettings());
         AddCardCommand = new RelayCommand(
             _ => AddCard());
         RemoveCardCommand = new RelayCommand(
@@ -210,8 +208,6 @@ public class MainViewModel : INotifyPropertyChanged
         SaveSheetsCommand = new RelayCommand(
             _ => SaveSheets(),
             _ => Cards.Count > 0);
-        SheetSettingsCommand = new RelayCommand(
-            _ => ConfigureSheet());
         Cards.CollectionChanged += (_, __) =>
         {
             SaveImagesCommand.RaiseCanExecuteChanged();
@@ -220,11 +216,16 @@ public class MainViewModel : INotifyPropertyChanged
         Inspector.PropertyChanged += OnInspectorPropertyChanged;
     }
 
-    private void ConfigureSheet()
+    private void ChangeSettings()
     {
-        var dlg = new SheetDialog(_sheetColumns, _sheetRows, _useJpeg) { Owner = Application.Current.MainWindow };
+        var dlg = new SettingsDialog(CardWidth, CardHeight, _sheetColumns, _sheetRows, _useJpeg)
+        {
+            Owner = Application.Current.MainWindow
+        };
         if (dlg.ShowDialog() == true)
         {
+            CardWidth = dlg.VM.WidthDip;
+            CardHeight = dlg.VM.HeightDip;
             _sheetColumns = dlg.Columns;
             _sheetRows = dlg.Rows;
             _useJpeg = dlg.UseJpeg;
@@ -1267,15 +1268,6 @@ public class MainViewModel : INotifyPropertyChanged
             _guideH.Visibility = Visibility.Collapsed;
     }
 
-    private void ChangeCardSize()
-    {
-        var dlg = new CanvasSizeDialog(CardWidth, CardHeight) { Owner = Application.Current.MainWindow };
-        if (dlg.ShowDialog() == true)
-        {
-            CardWidth = dlg.VM.WidthDip;
-            CardHeight = dlg.VM.HeightDip;
-        }
-    }
     private void HideGuides()
     {
         if (_guideH != null)
