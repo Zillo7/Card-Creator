@@ -736,6 +736,7 @@ public class MainViewModel : INotifyPropertyChanged
         string ext = _useJpeg ? ".jpg" : ".png";
         for (int s = 0; s < sheetCount; s++)
         {
+
             var dv = new DrawingVisual();
             using (var dc = dv.RenderOpen())
             {
