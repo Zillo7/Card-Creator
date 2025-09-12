@@ -29,6 +29,8 @@ public partial class MainWindow : Window
         Resources["NullToBoolInverse"] = new NullToBoolInverseConverter();
         InitializeComponent();
         VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee);
+        Loaded += (_, __) => UpdateRulerOrigins();
+        CardCanvas.SizeChanged += (_, __) => UpdateRulerOrigins();
     }
     private void CardCanvas_MouseLeftButtonDown(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftDown(e);
     private void CardCanvas_MouseMove(object s, MouseEventArgs e)
@@ -43,6 +45,14 @@ public partial class MainWindow : Window
     {
         RulerH.Marker = double.NaN;
         RulerV.Marker = double.NaN;
+    }
+
+    private void UpdateRulerOrigins()
+    {
+        var originInH = CardCanvas.TranslatePoint(new Point(0, 0), RulerH);
+        var originInV = CardCanvas.TranslatePoint(new Point(0, 0), RulerV);
+        RulerH.Origin = originInH.X;
+        RulerV.Origin = originInV.Y;
     }
     private void BrowseImage_Click(object s, RoutedEventArgs e)
     {

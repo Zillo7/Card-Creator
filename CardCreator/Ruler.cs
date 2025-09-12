@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace CardCreator
@@ -18,6 +19,10 @@ namespace CardCreator
         public static readonly DependencyProperty MarkerProperty = DependencyProperty.Register(
             nameof(Marker), typeof(double), typeof(Ruler),
             new FrameworkPropertyMetadata(double.NaN, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty OriginProperty = DependencyProperty.Register(
+            nameof(Origin), typeof(double), typeof(Ruler),
+            new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public Orientation Orientation
         {
@@ -37,6 +42,11 @@ namespace CardCreator
             set => SetValue(MarkerProperty, value);
         }
 
+        public double Origin
+        {
+            get => (double)GetValue(OriginProperty);
+            set => SetValue(OriginProperty, value);
+        }
         private double UnitsToDiu()
         {
             return Units switch
@@ -59,9 +69,14 @@ namespace CardCreator
             double tickLengthMajor = 10;
             double tickLengthMinor = 5;
 
-            for (double u = 0; u <= length / scale; u++)
+            double step = Units == MeasurementUnit.DeviceIndependent ? 10 : 1;
+            double start = Math.Floor((-Origin) / scale / step) * step;
+            double end = Math.Ceiling((length - Origin) / scale / step) * step;
+
+            for (double u = start; u <= end; u += step)
             {
-                double pos = Math.Round(u * scale) + 0.5; // crisp lines
+                double pos = Origin + u * scale + 0.5; // crisp lines
+                if (pos < 0 || pos > length) continue;
                 Point p1, p2;
                 if (Orientation == Orientation.Horizontal)
                 {
@@ -75,20 +90,23 @@ namespace CardCreator
                 }
                 dc.DrawLine(pen, p1, p2);
 
-                var ft = new FormattedText(u.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture,
-                    FlowDirection.LeftToRight, typeface, 8, textBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
-                if (Orientation == Orientation.Horizontal)
-                    dc.DrawText(ft, new Point(pos + 2, 0));
-                else
-                    dc.DrawText(ft, new Point(0, pos + 2));
+                if (Units == MeasurementUnit.Inches)
+                {
+                    var ft = new FormattedText(u.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture,
+                        FlowDirection.LeftToRight, typeface, 8, textBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                    if (Orientation == Orientation.Horizontal)
+                        dc.DrawText(ft, new Point(pos + 2, 0));
+                    else
+                        dc.DrawText(ft, new Point(0, pos + 2));
+                }
 
-                // minor ticks
-                if (scale >= 10)
+                // minor ticks for inches
+                if (Units == MeasurementUnit.Inches && scale >= 10)
                 {
                     for (int m = 1; m < 10; m++)
                     {
                         double mpos = pos + m * scale / 10;
-                        if (mpos > length) break;
+                        if (mpos < 0 || mpos > length) continue;
                         Point mp1, mp2;
                         if (Orientation == Orientation.Horizontal)
                         {
@@ -110,12 +128,12 @@ namespace CardCreator
                 var markerPen = new Pen(Brushes.Red, 1);
                 if (Orientation == Orientation.Horizontal)
                 {
-                    double x = Marker + 0.5;
+                    double x = Origin + Marker + 0.5;
                     dc.DrawLine(markerPen, new Point(x, 0), new Point(x, ActualHeight));
                 }
                 else
                 {
-                    double y = Marker + 0.5;
+                    double y = Origin + Marker + 0.5;
                     dc.DrawLine(markerPen, new Point(0, y), new Point(ActualWidth, y));
                 }
             }
