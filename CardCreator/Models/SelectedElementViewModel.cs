@@ -184,6 +184,7 @@ namespace CardCreator.Models {
       }
     }
     public SolidColorBrush ForegroundBrush => new SolidColorBrush(ForegroundColor);
+
     public string ForegroundHex {
       get => $"#{ForegroundColor.R:X2}{ForegroundColor.G:X2}{ForegroundColor.B:X2}";
       set {
