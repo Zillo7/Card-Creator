@@ -414,30 +414,34 @@ public class MainViewModel : INotifyPropertyChanged
         SelectSingle(container);
     }
 
-    private Grid CreateContainer(FrameworkElement inner, double x, double y, double w, double h)
+    private void AttachContainerChrome(Grid container)
     {
-        var container = new Grid { Background = Brushes.Transparent, Width = w, Height = h };
-        container.Children.Add(inner);
-        var selBorder = new Border { BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
-                                     BorderThickness = new Thickness(2),
-                                     CornerRadius = new CornerRadius(4),
-                                     Margin = new Thickness(-2),
-                                     IsHitTestVisible = false,
-                                     Visibility = Visibility.Collapsed };
+        var selBorder = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
+            BorderThickness = new Thickness(2),
+            CornerRadius = new CornerRadius(4),
+            Margin = new Thickness(-2),
+            IsHitTestVisible = false,
+            Visibility = Visibility.Collapsed
+        };
         container.Children.Add(selBorder);
 
         Thumb MakeThumb(Cursor cursor, HorizontalAlignment hAlign, VerticalAlignment vAlign, int xDir, int yDir)
         {
-            var t = new Thumb { Width = 10,
-                                Height = 10,
-                                Background = Brushes.White,
-                                BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
-                                BorderThickness = new Thickness(1),
-                                HorizontalAlignment = hAlign,
-                                VerticalAlignment = vAlign,
-                                Margin = new Thickness(-5),
-                                Cursor = cursor,
-                                Visibility = Visibility.Collapsed };
+            var t = new Thumb
+            {
+                Width = 10,
+                Height = 10,
+                Background = Brushes.White,
+                BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
+                BorderThickness = new Thickness(1),
+                HorizontalAlignment = hAlign,
+                VerticalAlignment = vAlign,
+                Margin = new Thickness(-5),
+                Cursor = cursor,
+                Visibility = Visibility.Collapsed
+            };
             t.DragDelta += (s, e) => ResizeFromCorner(container, e, xDir, yDir);
             return t;
         }
@@ -446,8 +450,20 @@ public class MainViewModel : INotifyPropertyChanged
         container.Children.Add(MakeThumb(Cursors.SizeNESW, HorizontalAlignment.Right, VerticalAlignment.Top, 1, -1));
         container.Children.Add(MakeThumb(Cursors.SizeNESW, HorizontalAlignment.Left, VerticalAlignment.Bottom, -1, 1));
         container.Children.Add(MakeThumb(Cursors.SizeNWSE, HorizontalAlignment.Right, VerticalAlignment.Bottom, 1, 1));
-        Canvas.SetLeft(container, SnapEnabled ? Snap(x) : x);
-        Canvas.SetTop(container, SnapEnabled ? Snap(y) : y);
+    }
+
+    private Grid CreateContainer(FrameworkElement inner, double x, double y, double w, double h, bool useSnap = true)
+    {
+        var container = new Grid { Background = Brushes.Transparent, Width = w, Height = h };
+        container.Children.Add(inner);
+        AttachContainerChrome(container);
+        if (useSnap && SnapEnabled)
+        {
+            x = Snap(x);
+            y = Snap(y);
+        }
+        Canvas.SetLeft(container, x);
+        Canvas.SetTop(container, y);
         return container;
     }
 
@@ -515,6 +531,38 @@ public class MainViewModel : INotifyPropertyChanged
         {
             Inspector.SetElement((FrameworkElement)container.Children[0]);
             Inspector.RefreshPosition();
+        }
+    }
+
+    private void RestoreResizeHandles()
+    {
+        if (_canvas == null)
+            return;
+        var items = _canvas.Children.Cast<UIElement>()
+                    .Select(el => new { Element = el, X = Canvas.GetLeft(el), Y = Canvas.GetTop(el) })
+                    .ToList();
+        _canvas.Children.Clear();
+        foreach (var item in items)
+        {
+            if (item.Element is Grid g)
+            {
+                if (g.Children.Count == 1 || g.Children[1] is not Border)
+                    AttachContainerChrome(g);
+                Canvas.SetLeft(g, item.X);
+                Canvas.SetTop(g, item.Y);
+                _canvas.Children.Add(g);
+            }
+            else if (item.Element is FrameworkElement fe)
+            {
+                double w = fe.Width;
+                double h = fe.Height;
+                var container = CreateContainer(fe, item.X, item.Y, w, h, useSnap: false);
+                if (fe is Image img && img.Visibility == Visibility.Visible)
+                    container.Background = Brushes.White;
+                if (fe.Tag is string t && !string.IsNullOrWhiteSpace(t))
+                    container.Tag = t;
+                _canvas.Children.Add(container);
+            }
         }
     }
 
@@ -616,6 +664,7 @@ public class MainViewModel : INotifyPropertyChanged
             TemplateModel model = dlg.FileName.EndsWith(".xaml", StringComparison.OrdinalIgnoreCase)
                 ? TemplateSerializer.LoadFromXaml(_canvas, dlg.FileName)
                 : TemplateSerializer.LoadFromJson(_canvas, dlg.FileName);
+            RestoreResizeHandles();
             ClearSelection();
             CardWidth = model.CardWidth;
             CardHeight = model.CardHeight;
@@ -687,6 +736,7 @@ public class MainViewModel : INotifyPropertyChanged
         string ext = _useJpeg ? ".jpg" : ".png";
         for (int s = 0; s < sheetCount; s++)
         {
+
             var dv = new DrawingVisual();
             using (var dc = dv.RenderOpen())
             {
