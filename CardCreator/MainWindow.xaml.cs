@@ -37,7 +37,9 @@ public partial class MainWindow : Window
         Loaded += (_, __) => UpdateRulerOrigins();
         CardCanvas.SizeChanged += (_, __) => UpdateRulerOrigins();
         VM.Inspector.PropertyChanged += Inspector_PropertyChanged;
-        InspectorRtb.Document = VM.Inspector.Document;
+        _updatingInspector = true;
+        InspectorRtb.Document = CloneDocument(VM.Inspector.Document);
+        _updatingInspector = false;
     }
     private void CardCanvas_MouseLeftButtonDown(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftDown(e);
     private void CardCanvas_MouseMove(object s, MouseEventArgs e)
@@ -58,10 +60,11 @@ public partial class MainWindow : Window
 
     private void Inspector_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (_updatingInspector) return;
         if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(SelectedElementViewModel.Document))
         {
             _updatingInspector = true;
-            InspectorRtb.Document = VM.Inspector.Document;
+            InspectorRtb.Document = CloneDocument(VM.Inspector.Document);
             _updatingInspector = false;
         }
     }
@@ -69,7 +72,21 @@ public partial class MainWindow : Window
     private void InspectorRtb_TextChanged(object s, TextChangedEventArgs e)
     {
         if (_updatingInspector) return;
-        VM.Inspector.Document = InspectorRtb.Document;
+        _updatingInspector = true;
+        VM.Inspector.Document = CloneDocument(InspectorRtb.Document);
+        _updatingInspector = false;
+    }
+
+    private static FlowDocument CloneDocument(FlowDocument document)
+    {
+        var clone = new FlowDocument();
+        using var stream = new MemoryStream();
+        var range = new TextRange(document.ContentStart, document.ContentEnd);
+        range.Save(stream, DataFormats.XamlPackage);
+        stream.Position = 0;
+        var cloneRange = new TextRange(clone.ContentStart, clone.ContentEnd);
+        cloneRange.Load(stream, DataFormats.XamlPackage);
+        return clone;
     }
 
     private void UpdateRulerOrigins()
