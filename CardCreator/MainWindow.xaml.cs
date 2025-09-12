@@ -43,6 +43,7 @@ public partial class MainWindow : Window
         VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee);
         Loaded += (_, __) => UpdateRulerOrigins();
         CardCanvas.SizeChanged += (_, __) => UpdateRulerOrigins();
+        VM.Inspector.PropertyChanged += Inspector_PropertyChanged;
     }
     private void CardCanvas_MouseLeftButtonDown(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftDown(e);
     private void CardCanvas_MouseMove(object s, MouseEventArgs e)
@@ -61,6 +62,11 @@ public partial class MainWindow : Window
         MarkerReadout.Text = string.Empty;
     }
 
+    private void Inspector_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.PropertyName))
+            UpdateFontToolbarFormatting();
+    }
     
 
     private void UpdateRulerOrigins()
@@ -99,13 +105,131 @@ public partial class MainWindow : Window
     }
     private void PickColor_Click(object s, RoutedEventArgs e)
     {
-        if (VM.Inspector.Element is not RichTextBox)
+        if (VM.Inspector.Element is not RichTextBox rtb)
             return;
         var dlg = new WinForms.ColorDialog();
-        var c = VM.Inspector.ForegroundColor;
+        var c = GetSelectionColor(rtb);
         dlg.Color = DrawingColor.FromArgb(c.A, c.R, c.G, c.B);
         if (dlg.ShowDialog() == WinForms.DialogResult.OK)
-            VM.Inspector.ForegroundColor = Color.FromArgb(dlg.Color.A, dlg.Color.R, dlg.Color.G, dlg.Color.B);
+        {
+            var color = Color.FromArgb(dlg.Color.A, dlg.Color.R, dlg.Color.G, dlg.Color.B);
+            var sel = new TextRange(rtb.Selection.Start, rtb.Selection.End);
+            sel.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(color));
+            UpdateFontToolbarFormatting();
+            VM.Inspector.NotifyTextChanged();
+        }
+    }
+    private void ToggleStrikethrough_Click(object s, RoutedEventArgs e)
+    {
+        if (VM.Inspector.Element is not RichTextBox rtb)
+            return;
+        var sel = new TextRange(rtb.Selection.Start, rtb.Selection.End);
+        var current = sel.GetPropertyValue(Inline.TextDecorationsProperty);
+        bool has = current is TextDecorationCollection tdc &&
+                   tdc.Any(td => td.Location == TextDecorationLocation.Strikethrough);
+        sel.ApplyPropertyValue(Inline.TextDecorationsProperty,
+            has ? null : TextDecorations.Strikethrough);
+        rtb.Focus();
+    }
+    private void InsertImage_Click(object s, RoutedEventArgs e)
+    {
+        if (VM.Inspector.Element is not RichTextBox rtb)
+            return;
+        var dlg = new OpenFileDialog { Filter = "Images|*.jpg;*.jpeg;*.png" };
+        if (dlg.ShowDialog() != true)
+            return;
+        try
+        {
+            var bi = new BitmapImage();
+            bi.BeginInit();
+            bi.UriSource = new Uri(dlg.FileName);
+            bi.CacheOption = BitmapCacheOption.OnLoad;
+            bi.EndInit();
+            bi.Freeze();
+            var img = new Image { Source = bi };
+            _ = new InlineUIContainer(img, rtb.CaretPosition);
+            rtb.Focus();
+        }
+        catch { }
+    }
+    private void FontFamilyCombo_SelectionChanged(object s, SelectionChangedEventArgs e)
+    {
+        if (VM.Inspector.Element is not RichTextBox rtb || FontFamilyCombo.SelectedItem is not FontFamily ff)
+            return;
+        var sel = new TextRange(rtb.Selection.Start, rtb.Selection.End);
+        sel.ApplyPropertyValue(TextElement.FontFamilyProperty, ff);
+        rtb.Focus();
+        UpdateFontToolbarFormatting();
+        VM.Inspector.NotifyTextChanged();
+    }
+    private void FontSizeCombo_SelectionChanged(object s, SelectionChangedEventArgs e) => ApplyFontSizeFromCombo();
+    private void FontSizeCombo_KeyDown(object s, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+            ApplyFontSizeFromText();
+    }
+    private void FontSizeCombo_LostFocus(object s, RoutedEventArgs e) => ApplyFontSizeFromText();
+    private void ApplyFontSizeFromCombo()
+    {
+        if (VM.Inspector.Element is not RichTextBox rtb)
+            return;
+        if (FontSizeCombo.SelectedItem is double size)
+        {
+            var sel = new TextRange(rtb.Selection.Start, rtb.Selection.End);
+            sel.ApplyPropertyValue(TextElement.FontSizeProperty, size);
+            rtb.Focus();
+            UpdateFontToolbarFormatting();
+            VM.Inspector.NotifyTextChanged();
+        }
+    }
+    private void ApplyFontSizeFromText()
+    {
+        if (VM.Inspector.Element is not RichTextBox rtb)
+            return;
+        if (double.TryParse(FontSizeCombo.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out var size))
+        {
+            var sel = new TextRange(rtb.Selection.Start, rtb.Selection.End);
+            sel.ApplyPropertyValue(TextElement.FontSizeProperty, size);
+            rtb.Focus();
+            UpdateFontToolbarFormatting();
+            VM.Inspector.NotifyTextChanged();
+        }
+    }
+    private void CanvasRichTextBox_SelectionChanged(object? sender, RoutedEventArgs e)
+    {
+        if (VM.Inspector.Element == sender)
+            UpdateFontToolbarFormatting();
+    }
+    private void UpdateFontToolbarFormatting()
+    {
+        if (VM.Inspector.Element is not RichTextBox rtb)
+        {
+            FontFamilyCombo.SelectedItem = null;
+            FontSizeCombo.Text = string.Empty;
+            ForegroundPreview.Background = Brushes.Black;
+            return;
+        }
+        var sel = rtb.Selection;
+        var ffObj = sel.GetPropertyValue(TextElement.FontFamilyProperty);
+        if (ffObj is FontFamily fam)
+            FontFamilyCombo.SelectedItem = fam;
+        else
+            FontFamilyCombo.SelectedItem = null;
+        var fsObj = sel.GetPropertyValue(TextElement.FontSizeProperty);
+        if (fsObj is double fs)
+            FontSizeCombo.Text = fs.ToString(CultureInfo.InvariantCulture);
+        else
+            FontSizeCombo.Text = rtb.FontSize.ToString(CultureInfo.InvariantCulture);
+        var colObj = sel.GetPropertyValue(TextElement.ForegroundProperty);
+        if (colObj is SolidColorBrush scb)
+            ForegroundPreview.Background = scb;
+        else
+            ForegroundPreview.Background = Brushes.Black;
+    }
+    private Color GetSelectionColor(RichTextBox rtb)
+    {
+        var obj = rtb.Selection.GetPropertyValue(TextElement.ForegroundProperty);
+        return obj is SolidColorBrush scb ? scb.Color : Colors.Black;
     }
     private void ToggleStrikethrough_Click(object s, RoutedEventArgs e)
     {
@@ -532,6 +656,11 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void AttachContainerChrome(Grid container)
     {
+        if (container.Children.Count > 0 && container.Children[0] is RichTextBox rtb)
+        {
+            rtb.TextChanged += CanvasRichTextBox_TextChanged;
+            rtb.SelectionChanged += CanvasRichTextBox_SelectionChanged;
+        }
         var selBorder = new Border
         {
             BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
@@ -573,7 +702,10 @@ public class MainViewModel : INotifyPropertyChanged
           var container = new Grid { Background = Brushes.Transparent, Width = w, Height = h };
         container.Children.Add(inner);
         if (inner is RichTextBox rtb)
+        {
             rtb.TextChanged += CanvasRichTextBox_TextChanged;
+            rtb.SelectionChanged += CanvasRichTextBox_SelectionChanged;
+        }
         AttachContainerChrome(container);
         if (useSnap && SnapEnabled)
         {
@@ -942,14 +1074,6 @@ public class MainViewModel : INotifyPropertyChanged
         if (el is RichTextBox tb)
         {
             try { field.Text = XamlWriter.Save(tb.Document); } catch { field.Text = string.Empty; }
-            field.FontSize = tb.FontSize;
-            field.FontFamily = tb.FontFamily.Source;
-            bool bold = tb.FontWeight == FontWeights.Bold;
-            bool italic = tb.FontStyle == FontStyles.Italic;
-            field.FontStyle = bold && italic ? "Bold Italic" : (bold ? "Bold" : (italic ? "Italic" : "None"));
-            field.TextAlignment = tb.Document.TextAlignment.ToString();
-            if (tb.Foreground is SolidColorBrush scb)
-                field.Foreground = $"#{scb.Color.R:X2}{scb.Color.G:X2}{scb.Color.B:X2}";
         }
         else if (el is Image img)
         {
@@ -975,48 +1099,6 @@ public class MainViewModel : INotifyPropertyChanged
                 try { tb.Document = (FlowDocument)XamlReader.Parse(field.Text); }
                 catch { tb.Document = new FlowDocument(new Paragraph(new Run(field.Text))); }
             }
-            if (field.FontSize.HasValue)
-                tb.FontSize = field.FontSize.Value;
-            if (field.FontFamily != null)
-                try
-                {
-                    tb.FontFamily = new FontFamily(field.FontFamily);
-                }
-                catch
-                {
-                }
-            if (field.FontStyle != null)
-            {
-                switch (field.FontStyle)
-                {
-                case "Italic":
-                    tb.FontStyle = FontStyles.Italic;
-                    tb.FontWeight = FontWeights.Normal;
-                    break;
-                case "Bold":
-                    tb.FontStyle = FontStyles.Normal;
-                    tb.FontWeight = FontWeights.Bold;
-                    break;
-                case "Bold Italic":
-                    tb.FontStyle = FontStyles.Italic;
-                    tb.FontWeight = FontWeights.Bold;
-                    break;
-                default:
-                    tb.FontStyle = FontStyles.Normal;
-                    tb.FontWeight = FontWeights.Normal;
-                    break;
-                }
-            }
-            if (field.TextAlignment != null && Enum.TryParse<TextAlignment>(field.TextAlignment, out var ta))
-                tb.Document.TextAlignment = ta;
-            if (field.Foreground != null)
-                try
-                {
-                    tb.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(field.Foreground));
-                }
-                catch
-                {
-                }
         }
         else if (el is Image img)
         {
@@ -1054,11 +1136,6 @@ public class MainViewModel : INotifyPropertyChanged
             if (c.type == "Text")
             {
                 headers.Add($"{c.name}.Text");
-                headers.Add($"{c.name}.FontSize");
-                headers.Add($"{c.name}.FontFamily");
-                headers.Add($"{c.name}.FontStyle");
-                headers.Add($"{c.name}.TextAlignment");
-                headers.Add($"{c.name}.Foreground");
                 headers.Add($"{c.name}.Hidden");
             }
             else if (c.type == "Image")
@@ -1078,11 +1155,6 @@ public class MainViewModel : INotifyPropertyChanged
                 if (c.type == "Text")
                 {
                     values.Add(CsvEscape(field?.Text));
-                    values.Add(CsvEscape(field?.FontSize?.ToString()));
-                    values.Add(CsvEscape(field?.FontFamily));
-                    values.Add(CsvEscape(field?.FontStyle));
-                    values.Add(CsvEscape(field?.TextAlignment));
-                    values.Add(CsvEscape(field?.Foreground));
                     values.Add(CsvEscape((field?.Hidden ?? false).ToString()));
                 }
                 else if (c.type == "Image")
@@ -1136,22 +1208,6 @@ public class MainViewModel : INotifyPropertyChanged
                 {
                 case "Text":
                     field.Text = val;
-                    break;
-                case "FontSize":
-                    if (double.TryParse(val, out var fs))
-                        field.FontSize = fs;
-                    break;
-                case "FontFamily":
-                    field.FontFamily = val;
-                    break;
-                case "FontStyle":
-                    field.FontStyle = val;
-                    break;
-                case "TextAlignment":
-                    field.TextAlignment = val;
-                    break;
-                case "Foreground":
-                    field.Foreground = val;
                     break;
                 case "Source":
                     field.Source = val;
@@ -1248,11 +1304,6 @@ public class MainViewModel : INotifyPropertyChanged
         switch (e.PropertyName)
         {
         case nameof(SelectedElementViewModel.Text):
-        case nameof(SelectedElementViewModel.FontSize):
-        case nameof(SelectedElementViewModel.FontFamily):
-        case nameof(SelectedElementViewModel.FontStyleOption):
-        case nameof(SelectedElementViewModel.TextAlignment):
-        case nameof(SelectedElementViewModel.ForegroundColor):
         case nameof(SelectedElementViewModel.ImageSourcePath):
         case nameof(SelectedElementViewModel.ImageStretch):
         case nameof(SelectedElementViewModel.IsHidden):

@@ -8,11 +8,6 @@ namespace CardCreator.Models {
   }
   public class CardField {
     public string? Text {get;set;}
-    public double? FontSize {get;set;}
-    public string? FontFamily {get;set;}
-    public string? FontStyle {get;set;}
-    public string? TextAlignment {get;set;}
-    public string? Foreground {get;set;}
     public string? Source {get;set;}
     public string? Stretch {get;set;}
     public bool? Hidden {get;set;}

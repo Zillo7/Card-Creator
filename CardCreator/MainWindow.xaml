@@ -85,14 +85,14 @@
             </MenuItem>
         </Menu>
         <ToolBar DockPanel.Dock="Top" DataContext="{Binding Inspector}" IsEnabled="{Binding IsText}">
-            <ComboBox Width="170" ItemsSource="{Binding FontFamilies}" SelectedItem="{Binding FontFamily}">
+            <ComboBox x:Name="FontFamilyCombo" Width="170" ItemsSource="{Binding FontFamilies}" SelectionChanged="FontFamilyCombo_SelectionChanged">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Source}" FontFamily="{Binding}"/>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <ComboBox Width="60" IsEditable="True" ItemsSource="{Binding FontSizes}" Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged}"/>
+            <ComboBox x:Name="FontSizeCombo" Width="60" IsEditable="True" ItemsSource="{Binding FontSizes}" SelectionChanged="FontSizeCombo_SelectionChanged" LostFocus="FontSizeCombo_LostFocus" KeyDown="FontSizeCombo_KeyDown"/>
             <Separator/>
             <Button Command="EditingCommands.ToggleBold" CommandTarget="{Binding Element}" FontWeight="Bold" Content="B"/>
             <Button Command="EditingCommands.ToggleItalic" CommandTarget="{Binding Element}" FontStyle="Italic" Content="I"/>
@@ -104,7 +104,7 @@
             </Button>
             <Separator/>
             <Button Click="PickColor_Click" ToolTip="Text Color">
-                <Border Width="16" Height="16" Background="{Binding ForegroundBrush}" BorderBrush="Black" BorderThickness="1"/>
+                <Border x:Name="ForegroundPreview" Width="16" Height="16" Background="Black" BorderBrush="Black" BorderThickness="1"/>
             </Button>
             <Separator/>
             <Button Command="EditingCommands.AlignLeft" CommandTarget="{Binding Element}" Content="L"/>
