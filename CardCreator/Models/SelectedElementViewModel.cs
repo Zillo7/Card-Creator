@@ -132,9 +132,11 @@ namespace CardCreator.Models {
         }
       }
     }
+    public void NotifyTextChanged() => OnPropertyChanged(nameof(Text));
     public double FontSize { get=> (Element as RichTextBox)?.FontSize ?? 16; set{ if(Element is RichTextBox tb){ tb.FontSize=value; OnPropertyChanged(); } } }
 
     public IEnumerable<FontFamily> FontFamilies { get; } = Fonts.SystemFontFamilies.OrderBy(f => f.Source);
+    public IEnumerable<double> FontSizes { get; } = new double[] { 8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72 };
     public FontFamily FontFamily {
       get => (Element as RichTextBox)?.FontFamily ?? Fonts.SystemFontFamilies.First();
       set { if (Element is RichTextBox tb) { tb.FontFamily = value; OnPropertyChanged(); } }

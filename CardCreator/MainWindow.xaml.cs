@@ -28,18 +28,21 @@ namespace CardCreator
 public partial class MainWindow : Window
 {
     public MainViewModel VM => (MainViewModel)DataContext;
-    private bool _updatingInspector;
     public MainWindow()
     {
         Resources["NullToBoolInverse"] = new NullToBoolInverseConverter();
         InitializeComponent();
+        CardCanvas.AddHandler(UIElement.MouseLeftButtonDownEvent,
+            new MouseButtonEventHandler(CardCanvas_MouseLeftButtonDown), true);
+        CardCanvas.AddHandler(UIElement.MouseMoveEvent,
+            new MouseEventHandler(CardCanvas_MouseMove), true);
+        CardCanvas.AddHandler(UIElement.MouseLeftButtonUpEvent,
+            new MouseButtonEventHandler(CardCanvas_MouseLeftButtonUp), true);
+        CardCanvas.AddHandler(UIElement.MouseLeaveEvent,
+            new MouseEventHandler(CardCanvas_MouseLeave), true);
         VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee);
         Loaded += (_, __) => UpdateRulerOrigins();
         CardCanvas.SizeChanged += (_, __) => UpdateRulerOrigins();
-        VM.Inspector.PropertyChanged += Inspector_PropertyChanged;
-        _updatingInspector = true;
-        InspectorRtb.Document = CloneDocument(VM.Inspector.Document);
-        _updatingInspector = false;
     }
     private void CardCanvas_MouseLeftButtonDown(object s, MouseButtonEventArgs e) => VM.OnCanvasMouseLeftDown(e);
     private void CardCanvas_MouseMove(object s, MouseEventArgs e)
@@ -58,36 +61,7 @@ public partial class MainWindow : Window
         MarkerReadout.Text = string.Empty;
     }
 
-    private void Inspector_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (_updatingInspector) return;
-        if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(SelectedElementViewModel.Document))
-        {
-            _updatingInspector = true;
-            InspectorRtb.Document = CloneDocument(VM.Inspector.Document);
-            _updatingInspector = false;
-        }
-    }
-
-    private void InspectorRtb_TextChanged(object s, TextChangedEventArgs e)
-    {
-        if (_updatingInspector) return;
-        _updatingInspector = true;
-        VM.Inspector.Document = CloneDocument(InspectorRtb.Document);
-        _updatingInspector = false;
-    }
-
-    private static FlowDocument CloneDocument(FlowDocument document)
-    {
-        var clone = new FlowDocument();
-        using var stream = new MemoryStream();
-        var range = new TextRange(document.ContentStart, document.ContentEnd);
-        range.Save(stream, DataFormats.XamlPackage);
-        stream.Position = 0;
-        var cloneRange = new TextRange(clone.ContentStart, clone.ContentEnd);
-        cloneRange.Load(stream, DataFormats.XamlPackage);
-        return clone;
-    }
+    
 
     private void UpdateRulerOrigins()
     {
@@ -132,6 +106,39 @@ public partial class MainWindow : Window
         dlg.Color = DrawingColor.FromArgb(c.A, c.R, c.G, c.B);
         if (dlg.ShowDialog() == WinForms.DialogResult.OK)
             VM.Inspector.ForegroundColor = Color.FromArgb(dlg.Color.A, dlg.Color.R, dlg.Color.G, dlg.Color.B);
+    }
+    private void ToggleStrikethrough_Click(object s, RoutedEventArgs e)
+    {
+        if (VM.Inspector.Element is not RichTextBox rtb)
+            return;
+        var sel = new TextRange(rtb.Selection.Start, rtb.Selection.End);
+        var current = sel.GetPropertyValue(Inline.TextDecorationsProperty);
+        bool has = current is TextDecorationCollection tdc &&
+                   tdc.Any(td => td.Location == TextDecorationLocation.Strikethrough);
+        sel.ApplyPropertyValue(Inline.TextDecorationsProperty,
+            has ? null : TextDecorations.Strikethrough);
+        rtb.Focus();
+    }
+    private void InsertImage_Click(object s, RoutedEventArgs e)
+    {
+        if (VM.Inspector.Element is not RichTextBox rtb)
+            return;
+        var dlg = new OpenFileDialog { Filter = "Images|*.jpg;*.jpeg;*.png" };
+        if (dlg.ShowDialog() != true)
+            return;
+        try
+        {
+            var bi = new BitmapImage();
+            bi.BeginInit();
+            bi.UriSource = new Uri(dlg.FileName);
+            bi.CacheOption = BitmapCacheOption.OnLoad;
+            bi.EndInit();
+            bi.Freeze();
+            var img = new Image { Source = bi };
+            _ = new InlineUIContainer(img, rtb.CaretPosition);
+            rtb.Focus();
+        }
+        catch { }
     }
     private void Window_KeyDown(object s, KeyEventArgs e) => VM.OnKeyDown(e);
 }
@@ -357,7 +364,11 @@ public class MainViewModel : INotifyPropertyChanged
                 ClearSelection();
             return;
         }
-        var container = FindAncestor<Grid>(e.OriginalSource as DependencyObject);
+        var source = e.OriginalSource as DependencyObject;
+        var rtb = FindAncestor<RichTextBox>(source);
+        if (rtb != null)
+            source = rtb;
+        var container = FindAncestor<Grid>(source);
         if (container != null && _canvas.Children.Contains(container))
         {
             if (e.OriginalSource is Thumb)
@@ -496,7 +507,8 @@ public class MainViewModel : INotifyPropertyChanged
         if (_canvas == null)
             return;
         var tb = new RichTextBox { FontSize = 28, Foreground = Brushes.Black,
-                                 RenderTransformOrigin = new Point(0.5, 0.5), IsHitTestVisible = false };
+                                 Background = Brushes.Transparent,
+                                 RenderTransformOrigin = new Point(0.5, 0.5) };
         tb.Document = new FlowDocument(new Paragraph(new Run("Text")));
         var container = CreateContainer(tb, 60, 60, 180, 60);
         tb.Width = 180;
@@ -556,10 +568,12 @@ public class MainViewModel : INotifyPropertyChanged
         container.Children.Add(MakeThumb(Cursors.SizeNWSE, HorizontalAlignment.Right, VerticalAlignment.Bottom, 1, 1));
     }
 
-    private Grid CreateContainer(FrameworkElement inner, double x, double y, double w, double h, bool useSnap = true)
-    {
-        var container = new Grid { Background = Brushes.Transparent, Width = w, Height = h };
+      private Grid CreateContainer(FrameworkElement inner, double x, double y, double w, double h, bool useSnap = true)
+      {
+          var container = new Grid { Background = Brushes.Transparent, Width = w, Height = h };
         container.Children.Add(inner);
+        if (inner is RichTextBox rtb)
+            rtb.TextChanged += CanvasRichTextBox_TextChanged;
         AttachContainerChrome(container);
         if (useSnap && SnapEnabled)
         {
@@ -569,6 +583,12 @@ public class MainViewModel : INotifyPropertyChanged
         Canvas.SetLeft(container, x);
         Canvas.SetTop(container, y);
         return container;
+      }
+
+    private void CanvasRichTextBox_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (Inspector.Element == sender)
+            Inspector.NotifyTextChanged();
     }
 
     private void ResizeFromCorner(Grid container, DragDeltaEventArgs e, int xDir, int yDir)
@@ -1407,7 +1427,9 @@ public class MainViewModel : INotifyPropertyChanged
         {
             if (from is T t)
                 return t;
-            from = VisualTreeHelper.GetParent(from);
+            from = from is Visual
+                ? VisualTreeHelper.GetParent(from)
+                : LogicalTreeHelper.GetParent(from);
         }
         return null;
     }
