@@ -123,7 +123,7 @@ public class MainViewModel : INotifyPropertyChanged
 
     public SelectedElementViewModel Inspector { get; } = new();
     private readonly List<Grid> _selected = new();
-    private double _cardWidth = 750;
+    private double _cardWidth = 240;
     public double CardWidth
     {
         get => _cardWidth;
@@ -132,7 +132,7 @@ public class MainViewModel : INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
-    private double _cardHeight = 1050;
+    private double _cardHeight = 336;
     public double CardHeight
     {
         get => _cardHeight;
@@ -464,7 +464,6 @@ public class MainViewModel : INotifyPropertyChanged
         var container = CreateContainer(img, 100, 100, 200, 140);
         img.Width = 200;
         img.Height = 140;
-        container.Background = Brushes.White;
         _canvas.Children.Add(container);
         SelectSingle(container);
     }
