@@ -343,7 +343,11 @@ public class MainViewModel : INotifyPropertyChanged
                 ClearSelection();
             return;
         }
-        var container = FindAncestor<Grid>(e.OriginalSource as DependencyObject);
+        var source = e.OriginalSource as DependencyObject;
+        var rtb = FindAncestor<RichTextBox>(source);
+        if (rtb != null)
+            source = rtb;
+        var container = FindAncestor<Grid>(source);
         if (container != null && _canvas.Children.Contains(container))
         {
             if (e.OriginalSource is Thumb)
@@ -1394,7 +1398,9 @@ public class MainViewModel : INotifyPropertyChanged
         {
             if (from is T t)
                 return t;
-            from = VisualTreeHelper.GetParent(from);
+            from = from is Visual
+                ? VisualTreeHelper.GetParent(from)
+                : LogicalTreeHelper.GetParent(from);
         }
         return null;
     }
