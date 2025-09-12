@@ -32,6 +32,14 @@ public partial class MainWindow : Window
     {
         Resources["NullToBoolInverse"] = new NullToBoolInverseConverter();
         InitializeComponent();
+        CardCanvas.AddHandler(UIElement.MouseLeftButtonDownEvent,
+            new MouseButtonEventHandler(CardCanvas_MouseLeftButtonDown), true);
+        CardCanvas.AddHandler(UIElement.MouseMoveEvent,
+            new MouseEventHandler(CardCanvas_MouseMove), true);
+        CardCanvas.AddHandler(UIElement.MouseLeftButtonUpEvent,
+            new MouseButtonEventHandler(CardCanvas_MouseLeftButtonUp), true);
+        CardCanvas.AddHandler(UIElement.MouseLeaveEvent,
+            new MouseEventHandler(CardCanvas_MouseLeave), true);
         VM.AttachCanvas(CardCanvas, GuideH, GuideV, Marquee);
         Loaded += (_, __) => UpdateRulerOrigins();
         CardCanvas.SizeChanged += (_, __) => UpdateRulerOrigins();
@@ -98,6 +106,18 @@ public partial class MainWindow : Window
         dlg.Color = DrawingColor.FromArgb(c.A, c.R, c.G, c.B);
         if (dlg.ShowDialog() == WinForms.DialogResult.OK)
             VM.Inspector.ForegroundColor = Color.FromArgb(dlg.Color.A, dlg.Color.R, dlg.Color.G, dlg.Color.B);
+    }
+    private void ToggleStrikethrough_Click(object s, RoutedEventArgs e)
+    {
+        if (VM.Inspector.Element is not RichTextBox rtb)
+            return;
+        var sel = new TextRange(rtb.Selection.Start, rtb.Selection.End);
+        var current = sel.GetPropertyValue(Inline.TextDecorationsProperty);
+        bool has = current is TextDecorationCollection tdc &&
+                   tdc.Any(td => td.Location == TextDecorationLocation.Strikethrough);
+        sel.ApplyPropertyValue(Inline.TextDecorationsProperty,
+            has ? null : TextDecorations.Strikethrough);
+        rtb.Focus();
     }
     private void Window_KeyDown(object s, KeyEventArgs e) => VM.OnKeyDown(e);
 }
@@ -462,6 +482,7 @@ public class MainViewModel : INotifyPropertyChanged
         if (_canvas == null)
             return;
         var tb = new RichTextBox { FontSize = 28, Foreground = Brushes.Black,
+                                 Background = Brushes.Transparent,
                                  RenderTransformOrigin = new Point(0.5, 0.5) };
         tb.Document = new FlowDocument(new Paragraph(new Run("Text")));
         var container = CreateContainer(tb, 60, 60, 180, 60);

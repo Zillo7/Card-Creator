@@ -85,15 +85,21 @@
             </MenuItem>
         </Menu>
         <ToolBar DockPanel.Dock="Top" DataContext="{Binding Inspector}" IsEnabled="{Binding IsText}">
-            <ComboBox Width="170" ItemsSource="{Binding FontFamilies}" SelectedItem="{Binding FontFamily}"/>
-            <ComboBox Width="60" Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged}"/>
+            <ComboBox Width="170" ItemsSource="{Binding FontFamilies}" SelectedItem="{Binding FontFamily}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Source}" FontFamily="{Binding}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <ComboBox Width="60" IsEditable="True" ItemsSource="{Binding FontSizes}" Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged}"/>
             <Separator/>
             <Button Command="EditingCommands.ToggleBold" CommandTarget="{Binding Element}" FontWeight="Bold" Content="B"/>
             <Button Command="EditingCommands.ToggleItalic" CommandTarget="{Binding Element}" FontStyle="Italic" Content="I"/>
             <Button Command="EditingCommands.ToggleUnderline" CommandTarget="{Binding Element}">
                 <TextBlock Text="U" TextDecorations="Underline"/>
             </Button>
-            <Button Command="EditingCommands.ToggleStrikethrough" CommandTarget="{Binding Element}">
+            <Button Click="ToggleStrikethrough_Click">
                 <TextBlock Text="abc" TextDecorations="Strikethrough"/>
             </Button>
             <Separator/>
@@ -128,11 +134,7 @@
                         <local:Ruler x:Name="RulerH" Grid.Row="0" Grid.Column="1" Height="20" Orientation="Horizontal" Units="{Binding Units}"/>
                         <local:Ruler x:Name="RulerV" Grid.Row="1" Grid.Column="0" Width="20" Orientation="Vertical" Units="{Binding Units}"/>
                         <Border Grid.Row="1" Grid.Column="1" Width="{Binding CardWidth}" Height="{Binding CardHeight}" CornerRadius="24" BorderBrush="#FFCCD1D8" BorderThickness="2" Background="{StaticResource CheckerBrush}">
-                            <Canvas x:Name="CardCanvas" Width="{Binding CardWidth}" Height="{Binding CardHeight}" Background="Transparent" Focusable="True"
-              MouseLeftButtonDown="CardCanvas_MouseLeftButtonDown"
-              MouseMove="CardCanvas_MouseMove"
-              MouseLeftButtonUp="CardCanvas_MouseLeftButtonUp"
-              MouseLeave="CardCanvas_MouseLeave">
+                            <Canvas x:Name="CardCanvas" Width="{Binding CardWidth}" Height="{Binding CardHeight}" Background="Transparent" Focusable="True">
                                 <Line x:Name="GuideH" Stroke="#660078D7" StrokeThickness="1.5" Visibility="Collapsed"/>
                                 <Line x:Name="GuideV" Stroke="#660078D7" StrokeThickness="1.5" Visibility="Collapsed"/>
                                 <Rectangle x:Name="Marquee" Stroke="#770078D7" StrokeDashArray="3,2" Fill="#220078D7" Visibility="Collapsed"/>

@@ -65,7 +65,7 @@ namespace CardCreator.Services {
           if(item.Hidden==true) img.Visibility=Visibility.Hidden;
           inner=img;
         } else {
-          var rtb=new RichTextBox{ FontSize=item.FontSize??28 };
+          var rtb=new RichTextBox{ FontSize=item.FontSize??28, Background=Brushes.Transparent };
           if(!string.IsNullOrWhiteSpace(item.Text)){
             try{ rtb.Document=(FlowDocument)XamlReader.Parse(item.Text); }
             catch{ rtb.Document=new FlowDocument(new Paragraph(new Run(item.Text))); }
@@ -76,6 +76,7 @@ namespace CardCreator.Services {
           if(!string.IsNullOrWhiteSpace(item.TextAlignment) && Enum.TryParse<TextAlignment>(item.TextAlignment, out var ta)) rtb.Document.TextAlignment=ta;
           if(!string.IsNullOrWhiteSpace(item.ForegroundHex)){ try{ rtb.Foreground=new SolidColorBrush((Color)ColorConverter.ConvertFromString(item.ForegroundHex!)); }catch{} }
           if(item.Hidden==true) rtb.Visibility=Visibility.Hidden;
+          rtb.IsHitTestVisible=true;
           inner=rtb;
         }
         if(!string.IsNullOrWhiteSpace(item.ControlName)) inner.Name=item.ControlName;
@@ -97,7 +98,7 @@ namespace CardCreator.Services {
       if(obj!=null){
         canvas.Children.Clear();
         foreach(UIElement child in obj.Children){
-          if(child is RichTextBox rtb) rtb.IsHitTestVisible=true;
+          if(child is RichTextBox rtb){ rtb.IsHitTestVisible=true; rtb.Background=Brushes.Transparent; }
           canvas.Children.Add(child);
         }
         model.CardWidth=obj.Width;
