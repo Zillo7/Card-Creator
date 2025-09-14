@@ -1,32 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\CardCreator.csproj": {}
+    "/workspace/Card-Creator/CardCreator/CardCreator.csproj": {}
   },
   "projects": {
-    "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\CardCreator.csproj": {
+    "/workspace/Card-Creator/CardCreator/CardCreator.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\CardCreator.csproj",
+        "projectUniqueName": "/workspace/Card-Creator/CardCreator/CardCreator.csproj",
         "projectName": "CardCreator",
-        "projectPath": "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\CardCreator.csproj",
-        "packagesPath": "C:\\Users\\brian\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\obj\\",
+        "projectPath": "/workspace/Card-Creator/CardCreator/CardCreator.csproj",
+        "packagesPath": "/root/.nuget/packages/",
+        "outputPath": "/workspace/Card-Creator/CardCreator/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\brian\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/root/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0-windows"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -39,17 +32,17 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
         "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
+          "dependencies": {
+            "Xceed.Wpf.Toolkit": {
+              "target": "Package",
+              "version": "[4.5.2, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -61,15 +54,18 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[8.0.19, 8.0.19]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
-            },
-            "Microsoft.WindowsDesktop.App.WPF": {
-              "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.119/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

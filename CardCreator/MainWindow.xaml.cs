@@ -225,6 +225,12 @@ public partial class MainWindow : Window
         var obj = rtb.Selection.GetPropertyValue(TextElement.ForegroundProperty);
         return obj is SolidColorBrush scb ? scb.Color : Colors.Black;
     }
+    private void Workspace_MouseLeftButtonDown(object s, MouseButtonEventArgs e)
+    {
+        var source = e.OriginalSource as DependencyObject;
+        if (MainViewModel.FindAncestor<Canvas>(source) != CardCanvas)
+            VM.ClearSelection();
+    }
     private void Window_KeyDown(object s, KeyEventArgs e) => VM.OnKeyDown(e);
 }
 
@@ -537,7 +543,18 @@ public class MainViewModel : INotifyPropertyChanged
 
     public void OnKeyDown(KeyEventArgs e)
     {
-        if (_canvas == null || _selected.Count == 0)
+        if (_canvas == null)
+            return;
+        if (e.Key == Key.Escape)
+        {
+            if (_selected.Count > 0)
+            {
+                ClearSelection();
+                e.Handled = true;
+            }
+            return;
+        }
+        if (_selected.Count == 0)
             return;
         if (e.Key == Key.Delete)
         {
@@ -812,7 +829,7 @@ public class MainViewModel : INotifyPropertyChanged
         UpdateSelectionVisuals();
         UpdateInspector();
     }
-    private void ClearSelection()
+    public void ClearSelection()
     {
         _selected.Clear();
         UpdateSelectionVisuals();
@@ -1447,7 +1464,7 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     private double Snap(double v) => SnapEnabled ? Math.Round(v / _gridSize) * _gridSize : v;
-    private static T? FindAncestor<T>(DependencyObject? from)
+    internal static T? FindAncestor<T>(DependencyObject? from)
         where T : DependencyObject
     {
         while (from != null)

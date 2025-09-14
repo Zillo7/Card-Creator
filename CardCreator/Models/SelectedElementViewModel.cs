@@ -35,29 +35,21 @@ namespace CardCreator.Models {
     public double X { get=>GetLeft(); set=>SetLeft(value); }
     public double Y { get=>GetTop(); set=>SetTop(value); }
     public double Width {
-      get => Element?.Width ?? double.NaN;
+      get => Container?.Width ?? Element?.Width ?? double.NaN;
       set {
-        if (Element != null) {
-          Element.Width = value;
-          if (Element is RichTextBox tb) {
-            if (tb.Parent is Grid g) g.Width = value;
-          }
-          OnPropertyChanged();
-          OnPropertyChanged(nameof(WidthInput));
-        }
+        if (Element != null) Element.Width = value;
+        if (Container != null) Container.Width = value;
+        OnPropertyChanged();
+        OnPropertyChanged(nameof(WidthInput));
       }
     }
     public double Height {
-      get => Element?.Height ?? double.NaN;
+      get => Container?.Height ?? Element?.Height ?? double.NaN;
       set {
-        if (Element != null) {
-          Element.Height = value;
-          if (Element is RichTextBox tb) {
-            if (tb.Parent is Grid g) g.Height = value;
-          }
-          OnPropertyChanged();
-          OnPropertyChanged(nameof(HeightInput));
-        }
+        if (Element != null) Element.Height = value;
+        if (Container != null) Container.Height = value;
+        OnPropertyChanged();
+        OnPropertyChanged(nameof(HeightInput));
       }
     }
     public string WidthInput {
@@ -97,19 +89,29 @@ namespace CardCreator.Models {
       }
     }
     public double Rotation {
-      get{
-        if(Element?.RenderTransform is TransformGroup tg)
-          foreach(var t in tg.Children) if(t is RotateTransform r) return r.Angle;
-        if(Element?.RenderTransform is RotateTransform r2) return r2.Angle;
+      get {
+        if (Container?.RenderTransform is TransformGroup tg)
+          foreach (var t in tg.Children) if (t is RotateTransform r) return r.Angle;
+        if (Container?.RenderTransform is RotateTransform r2) return r2.Angle;
         return 0;
       }
-      set{
-        if(Element==null) return;
-        TransformGroup tg = Element.RenderTransform as TransformGroup ?? new TransformGroup();
-        RotateTransform? r=null;
-        foreach(var t in tg.Children) if(t is RotateTransform rr){ r=rr; break; }
-        if(r==null){ tg.Children.Add(new RotateTransform(value)); Element.RenderTransform=tg; } else r.Angle=value;
-        Element.RenderTransformOrigin=new Point(0.5,0.5);
+      set {
+        if (Element == null) return;
+        TransformGroup tgEl = Element.RenderTransform as TransformGroup ?? new TransformGroup();
+        RotateTransform? rEl = null;
+        foreach (var t in tgEl.Children) if (t is RotateTransform rr) { rEl = rr; break; }
+        if (rEl == null) { tgEl.Children.Add(new RotateTransform(value)); Element.RenderTransform = tgEl; }
+        else rEl.Angle = value;
+        Element.RenderTransformOrigin = new Point(0.5, 0.5);
+        if (Container != null)
+        {
+          TransformGroup tgC = Container.RenderTransform as TransformGroup ?? new TransformGroup();
+          RotateTransform? rC = null;
+          foreach (var t in tgC.Children) if (t is RotateTransform rr) { rC = rr; break; }
+          if (rC == null) { tgC.Children.Add(new RotateTransform(value)); Container.RenderTransform = tgC; }
+          else rC.Angle = value;
+          Container.RenderTransformOrigin = new Point(0.5, 0.5);
+        }
         OnPropertyChanged();
       }
     }

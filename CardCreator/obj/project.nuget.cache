@@ -1,8 +1,22 @@
 {
   "version": 2,
-  "dgSpecHash": "iq0NR1qR4wI=",
+  "dgSpecHash": "/U/hAHrQ+kvQPjvbQeYqHF+Urbl1e+bh1UUpOESIA+LNiL73GZAvsvPl+9EZx4qNfhkQHCS8Us8rt+adwyej8A==",
   "success": true,
-  "projectFilePath": "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\CardCreator.csproj",
-  "expectedPackageFiles": [],
-  "logs": []
+  "projectFilePath": "/workspace/Card-Creator/CardCreator/CardCreator.csproj",
+  "expectedPackageFiles": [
+    "/root/.nuget/packages/xceed.wpf.toolkit/4.5.22477.12540/xceed.wpf.toolkit.4.5.22477.12540.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.19/microsoft.windowsdesktop.app.ref.8.0.19.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1603",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "CardCreator depends on Xceed.Wpf.Toolkit (>= 4.5.2) but Xceed.Wpf.Toolkit 4.5.2 was not found. An approximate best match of Xceed.Wpf.Toolkit 4.5.22477.12540 was resolved.",
+      "libraryId": "Xceed.Wpf.Toolkit",
+      "targetGraphs": [
+        "net8.0-windows7.0"
+      ]
+    }
+  ]
 }
