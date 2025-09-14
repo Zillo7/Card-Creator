@@ -9,6 +9,20 @@
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Icons\AlignCenter.png" />
+    <None Remove="Icons\AlignJustify.png" />
+    <None Remove="Icons\AlignLeft.png" />
+    <None Remove="Icons\AlignRight.png" />
+    <None Remove="Icons\NumberedList.png" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Xceed.Wpf.Toolkit" Version="4.5.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\AlignCenter.png" />
+    <Resource Include="Icons\AlignJustify.png" />
+    <Resource Include="Icons\AlignLeft.png" />
+    <Resource Include="Icons\AlignRight.png" />
+    <Resource Include="Icons\NumberedList.png" />
   </ItemGroup>
 </Project>
