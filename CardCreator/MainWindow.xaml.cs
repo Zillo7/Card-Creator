@@ -145,8 +145,8 @@ public partial class MainWindow : Window
             bi.CacheOption = BitmapCacheOption.OnLoad;
             bi.EndInit();
             bi.Freeze();
-            var img = new Image { Source = bi };
-            _ = new InlineUIContainer(img, rtb.CaretPosition);
+            var container = VM.CreateRtbImageContainer(bi);
+            _ = new InlineUIContainer(container, rtb.CaretPosition);
             rtb.Focus();
         }
         catch { }
@@ -714,6 +714,117 @@ public class MainViewModel : INotifyPropertyChanged
             mw.UpdateFontToolbarFormatting();
     }
 
+    public Grid CreateRtbImageContainer(BitmapSource source)
+    {
+        var img = new Image
+        {
+            Source = source,
+            Width = source.PixelWidth,
+            Height = source.PixelHeight,
+            Stretch = Stretch.Uniform
+        };
+        var container = new Grid
+        {
+            Width = img.Width,
+            Height = img.Height,
+            Background = Brushes.Transparent
+        };
+        container.Children.Add(img);
+        AttachInlineImageChrome(container);
+        return container;
+    }
+
+    private void AttachInlineImageChrome(Grid container)
+    {
+        if (container.Children.Count == 0 || container.Children[0] is not Image)
+            return;
+        var selBorder = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
+            BorderThickness = new Thickness(2),
+            CornerRadius = new CornerRadius(4),
+            Margin = new Thickness(-2),
+            IsHitTestVisible = false
+        };
+        container.Children.Add(selBorder);
+        Thumb MakeThumb(Cursor cursor, HorizontalAlignment hAlign, VerticalAlignment vAlign, int xDir, int yDir)
+        {
+            var t = new Thumb
+            {
+                Width = 10,
+                Height = 10,
+                Background = Brushes.White,
+                BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
+                BorderThickness = new Thickness(1),
+                HorizontalAlignment = hAlign,
+                VerticalAlignment = vAlign,
+                Margin = new Thickness(-5),
+                Cursor = cursor
+            };
+            t.DragDelta += (s, e) => ResizeInlineImage(container, e, xDir, yDir);
+            return t;
+        }
+        container.Children.Add(MakeThumb(Cursors.SizeNWSE, HorizontalAlignment.Left, VerticalAlignment.Top, -1, -1));
+        container.Children.Add(MakeThumb(Cursors.SizeNESW, HorizontalAlignment.Right, VerticalAlignment.Top, 1, -1));
+        container.Children.Add(MakeThumb(Cursors.SizeNESW, HorizontalAlignment.Left, VerticalAlignment.Bottom, -1, 1));
+        container.Children.Add(MakeThumb(Cursors.SizeNWSE, HorizontalAlignment.Right, VerticalAlignment.Bottom, 1, 1));
+    }
+
+    private void ResizeInlineImage(Grid container, DragDeltaEventArgs e, int xDir, int yDir)
+    {
+        double width = container.Width + e.HorizontalChange * xDir;
+        double height = container.Height + e.VerticalChange * yDir;
+        if (width < 10)
+            width = 10;
+        if (height < 10)
+            height = 10;
+        container.Width = width;
+        container.Height = height;
+        if (container.Children[0] is Image img)
+        {
+            img.Width = width;
+            img.Height = height;
+        }
+    }
+
+    internal void AttachRichTextImages(RichTextBox rtb)
+    {
+        TextPointer pointer = rtb.Document.ContentStart;
+        while (pointer != null && pointer.CompareTo(rtb.Document.ContentEnd) < 0)
+        {
+            if (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.EmbeddedElement &&
+                pointer.GetAdjacentElement(LogicalDirection.Forward) is UIElement el &&
+                pointer.Parent is InlineUIContainer iuic)
+            {
+                if (el is Image img)
+                {
+                    if (img.Source is BitmapSource bs)
+                    {
+                        var g = CreateRtbImageContainer(bs);
+                        if (img.Width > 0)
+                        {
+                            g.Width = img.Width;
+                            if (g.Children[0] is Image gi)
+                                gi.Width = img.Width;
+                        }
+                        if (img.Height > 0)
+                        {
+                            g.Height = img.Height;
+                            if (g.Children[0] is Image gi)
+                                gi.Height = img.Height;
+                        }
+                        iuic.Child = g;
+                    }
+                }
+                else if (el is Grid g)
+                {
+                    AttachInlineImageChrome(g);
+                }
+            }
+            pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+        }
+    }
+
     private void ResizeFromCorner(Grid container, DragDeltaEventArgs e, int xDir, int yDir)
     {
         if (_canvas == null)
@@ -811,6 +922,8 @@ public class MainViewModel : INotifyPropertyChanged
                 _canvas.Children.Add(container);
             }
         }
+        foreach (var rtb in _canvas.Children.OfType<Grid>().Select(g => g.Children[0]).OfType<RichTextBox>())
+            AttachRichTextImages(rtb);
     }
 
     private void SelectSingle(Grid c)
