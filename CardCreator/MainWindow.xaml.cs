@@ -970,7 +970,12 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void UpdateInspector()
     {
-        if (_selected.Count == 1)
+        if (_selectedRtbImage != null)
+        {
+            Inspector.SetElement((FrameworkElement)_selectedRtbImage.Children[0]);
+            _lastControlName = Inspector.ControlName;
+        }
+        else if (_selected.Count == 1)
         {
             Inspector.SetElement((FrameworkElement)_selected[0].Children[0]);
             _lastControlName = Inspector.ControlName;
