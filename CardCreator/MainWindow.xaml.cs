@@ -446,6 +446,11 @@ public class MainViewModel : INotifyPropertyChanged
         if (_canvas == null)
             return;
         var pos = e.GetPosition(_canvas);
+        var source = e.OriginalSource as DependencyObject;
+        if (source is Thumb thumb &&
+            FindAncestor<Grid>(thumb) is Grid g &&
+            g.Parent is InlineUIContainer)
+            return;
         if (e.OriginalSource == _canvas)
         {
             _draggingMarquee = true;
@@ -455,7 +460,6 @@ public class MainViewModel : INotifyPropertyChanged
                 ClearSelection();
             return;
         }
-        var source = e.OriginalSource as DependencyObject;
         var rtb = FindAncestor<RichTextBox>(source);
         if (rtb != null)
             source = rtb;
@@ -751,14 +755,14 @@ public class MainViewModel : INotifyPropertyChanged
         {
             var t = new Thumb
             {
-                Width = 10,
-                Height = 10,
+                Width = 20,
+                Height = 20,
                 Background = Brushes.White,
                 BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
                 BorderThickness = new Thickness(1),
                 HorizontalAlignment = hAlign,
                 VerticalAlignment = vAlign,
-                Margin = new Thickness(-5),
+                Margin = new Thickness(-10),
                 Cursor = cursor
             };
             t.DragDelta += (s, e) => ResizeInlineImage(container, e, xDir, yDir);
