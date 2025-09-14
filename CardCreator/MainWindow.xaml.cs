@@ -446,6 +446,8 @@ public class MainViewModel : INotifyPropertyChanged
     {
         if (_canvas == null)
             return;
+        if (_selectedRtbImage != null && e.Handled)
+            return;
         var pos = e.GetPosition(_canvas);
         var source = e.OriginalSource as DependencyObject;
         var iuic = FindAncestor<InlineUIContainer>(source);
@@ -750,10 +752,27 @@ public class MainViewModel : INotifyPropertyChanged
         return container;
     }
 
+    private void InlineImage_PreviewMouseLeftButtonDown(object? sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+        Grid? grid = sender as Grid;
+        if (grid == null && sender is Image img && img.Parent is Grid g)
+            grid = g;
+        if (grid == null)
+            return;
+        ClearSelection();
+        _selectedRtbImage = grid;
+        if (grid.Children.Count > 1 && grid.Children[1] is Border b)
+            b.Visibility = Visibility.Visible;
+        Inspector.SetElement((FrameworkElement)grid.Children[0]);
+    }
+
     private void AttachInlineImageChrome(Grid container)
     {
-        if (container.Children.Count == 0 || container.Children[0] is not Image)
+        if (container.Children.Count == 0 || container.Children[0] is not Image img)
             return;
+        container.PreviewMouseLeftButtonDown += InlineImage_PreviewMouseLeftButtonDown;
+        img.PreviewMouseLeftButtonDown += InlineImage_PreviewMouseLeftButtonDown;
         var selBorder = new Border
         {
             BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
