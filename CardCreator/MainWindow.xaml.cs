@@ -96,7 +96,7 @@ public partial class MainWindow : Window
     };
     private void BrowseImage_Click(object s, RoutedEventArgs e)
     {
-        if (!VM.HasSelection || VM.SingleSelectedInner is not Image)
+        if (VM.Inspector.Element is not Image)
             return;
         var dlg = new OpenFileDialog { Filter = "Images|*.png;*.jpg;*.jpeg;*.bmp;*.gif|All files|*.*" };
         if (dlg.ShowDialog() == true)
@@ -270,6 +270,7 @@ public class MainViewModel : INotifyPropertyChanged
 
     public SelectedElementViewModel Inspector { get; } = new();
     private readonly List<Grid> _selected = new();
+    private Grid? _selectedRtbImage;
     private double _cardWidth = 240;
     public double CardWidth
     {
@@ -447,10 +448,16 @@ public class MainViewModel : INotifyPropertyChanged
             return;
         var pos = e.GetPosition(_canvas);
         var source = e.OriginalSource as DependencyObject;
-        if (source is Thumb thumb &&
-            FindAncestor<Grid>(thumb) is Grid g &&
-            g.Parent is InlineUIContainer)
+        var iuic = FindAncestor<InlineUIContainer>(source);
+        if (iuic?.Child is Grid g)
+        {
+            ClearSelection();
+            _selectedRtbImage = g;
+            if (g.Children.Count > 1 && g.Children[1] is Border b)
+                b.Visibility = Visibility.Visible;
+            Inspector.SetElement((FrameworkElement)g.Children[0]);
             return;
+        }
         if (e.OriginalSource == _canvas)
         {
             _draggingMarquee = true;
@@ -720,17 +727,22 @@ public class MainViewModel : INotifyPropertyChanged
 
     public Grid CreateRtbImageContainer(BitmapSource source)
     {
+        double scale = Math.Min(100.0 / source.PixelWidth, 100.0 / source.PixelHeight);
+        if (scale > 1)
+            scale = 1;
+        double width = source.PixelWidth * scale;
+        double height = source.PixelHeight * scale;
         var img = new Image
         {
             Source = source,
-            Width = source.PixelWidth,
-            Height = source.PixelHeight,
+            Width = width,
+            Height = height,
             Stretch = Stretch.Uniform
         };
         var container = new Grid
         {
-            Width = img.Width,
-            Height = img.Height,
+            Width = width,
+            Height = height,
             Background = Brushes.Transparent
         };
         container.Children.Add(img);
@@ -748,47 +760,10 @@ public class MainViewModel : INotifyPropertyChanged
             BorderThickness = new Thickness(2),
             CornerRadius = new CornerRadius(4),
             Margin = new Thickness(-2),
-            IsHitTestVisible = false
+            IsHitTestVisible = false,
+            Visibility = Visibility.Collapsed
         };
         container.Children.Add(selBorder);
-        Thumb MakeThumb(Cursor cursor, HorizontalAlignment hAlign, VerticalAlignment vAlign, int xDir, int yDir)
-        {
-            var t = new Thumb
-            {
-                Width = 20,
-                Height = 20,
-                Background = Brushes.White,
-                BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
-                BorderThickness = new Thickness(1),
-                HorizontalAlignment = hAlign,
-                VerticalAlignment = vAlign,
-                Margin = new Thickness(-10),
-                Cursor = cursor
-            };
-            t.DragDelta += (s, e) => ResizeInlineImage(container, e, xDir, yDir);
-            return t;
-        }
-        container.Children.Add(MakeThumb(Cursors.SizeNWSE, HorizontalAlignment.Left, VerticalAlignment.Top, -1, -1));
-        container.Children.Add(MakeThumb(Cursors.SizeNESW, HorizontalAlignment.Right, VerticalAlignment.Top, 1, -1));
-        container.Children.Add(MakeThumb(Cursors.SizeNESW, HorizontalAlignment.Left, VerticalAlignment.Bottom, -1, 1));
-        container.Children.Add(MakeThumb(Cursors.SizeNWSE, HorizontalAlignment.Right, VerticalAlignment.Bottom, 1, 1));
-    }
-
-    private void ResizeInlineImage(Grid container, DragDeltaEventArgs e, int xDir, int yDir)
-    {
-        double width = container.Width + e.HorizontalChange * xDir;
-        double height = container.Height + e.VerticalChange * yDir;
-        if (width < 10)
-            width = 10;
-        if (height < 10)
-            height = 10;
-        container.Width = width;
-        container.Height = height;
-        if (container.Children[0] is Image img)
-        {
-            img.Width = width;
-            img.Height = height;
-        }
     }
 
     internal void AttachRichTextImages(RichTextBox rtb)
@@ -949,6 +924,12 @@ public class MainViewModel : INotifyPropertyChanged
     public void ClearSelection()
     {
         _selected.Clear();
+        if (_selectedRtbImage != null)
+        {
+            if (_selectedRtbImage.Children.Count > 1 && _selectedRtbImage.Children[1] is Border b)
+                b.Visibility = Visibility.Collapsed;
+            _selectedRtbImage = null;
+        }
         UpdateSelectionVisuals();
         Inspector.SetElement(null);
         OnPropertyChanged(nameof(HasSelection));
@@ -989,7 +970,12 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void UpdateInspector()
     {
-        if (_selected.Count == 1)
+        if (_selectedRtbImage != null)
+        {
+            Inspector.SetElement((FrameworkElement)_selectedRtbImage.Children[0]);
+            _lastControlName = Inspector.ControlName;
+        }
+        else if (_selected.Count == 1)
         {
             Inspector.SetElement((FrameworkElement)_selected[0].Children[0]);
             _lastControlName = Inspector.ControlName;
