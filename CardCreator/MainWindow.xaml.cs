@@ -447,9 +447,7 @@ public class MainViewModel : INotifyPropertyChanged
             return;
         var pos = e.GetPosition(_canvas);
         var source = e.OriginalSource as DependencyObject;
-        if (source is Thumb thumb &&
-            FindAncestor<Grid>(thumb) is Grid g &&
-            g.Parent is InlineUIContainer)
+        if (FindAncestor<InlineUIContainer>(source) != null)
             return;
         if (e.OriginalSource == _canvas)
         {
@@ -720,17 +718,22 @@ public class MainViewModel : INotifyPropertyChanged
 
     public Grid CreateRtbImageContainer(BitmapSource source)
     {
+        double scale = Math.Min(100.0 / source.PixelWidth, 100.0 / source.PixelHeight);
+        if (scale > 1)
+            scale = 1;
+        double width = source.PixelWidth * scale;
+        double height = source.PixelHeight * scale;
         var img = new Image
         {
             Source = source,
-            Width = source.PixelWidth,
-            Height = source.PixelHeight,
+            Width = width,
+            Height = height,
             Stretch = Stretch.Uniform
         };
         var container = new Grid
         {
-            Width = img.Width,
-            Height = img.Height,
+            Width = width,
+            Height = height,
             Background = Brushes.Transparent
         };
         container.Children.Add(img);
