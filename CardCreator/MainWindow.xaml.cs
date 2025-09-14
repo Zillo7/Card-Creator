@@ -66,8 +66,7 @@ public partial class MainWindow : Window
     {
         if (string.IsNullOrEmpty(e.PropertyName))
             UpdateFontToolbarFormatting();
-    }
-    
+    }    
 
     private void UpdateRulerOrigins()
     {
@@ -195,12 +194,7 @@ public partial class MainWindow : Window
             VM.Inspector.NotifyTextChanged();
         }
     }
-    private void CanvasRichTextBox_SelectionChanged(object? sender, RoutedEventArgs e)
-    {
-        if (VM.Inspector.Element == sender)
-            UpdateFontToolbarFormatting();
-    }
-    private void UpdateFontToolbarFormatting()
+    internal void UpdateFontToolbarFormatting()
     {
         if (VM.Inspector.Element is not RichTextBox rtb)
         {
@@ -230,39 +224,6 @@ public partial class MainWindow : Window
     {
         var obj = rtb.Selection.GetPropertyValue(TextElement.ForegroundProperty);
         return obj is SolidColorBrush scb ? scb.Color : Colors.Black;
-    }
-    private void ToggleStrikethrough_Click(object s, RoutedEventArgs e)
-    {
-        if (VM.Inspector.Element is not RichTextBox rtb)
-            return;
-        var sel = new TextRange(rtb.Selection.Start, rtb.Selection.End);
-        var current = sel.GetPropertyValue(Inline.TextDecorationsProperty);
-        bool has = current is TextDecorationCollection tdc &&
-                   tdc.Any(td => td.Location == TextDecorationLocation.Strikethrough);
-        sel.ApplyPropertyValue(Inline.TextDecorationsProperty,
-            has ? null : TextDecorations.Strikethrough);
-        rtb.Focus();
-    }
-    private void InsertImage_Click(object s, RoutedEventArgs e)
-    {
-        if (VM.Inspector.Element is not RichTextBox rtb)
-            return;
-        var dlg = new OpenFileDialog { Filter = "Images|*.jpg;*.jpeg;*.png" };
-        if (dlg.ShowDialog() != true)
-            return;
-        try
-        {
-            var bi = new BitmapImage();
-            bi.BeginInit();
-            bi.UriSource = new Uri(dlg.FileName);
-            bi.CacheOption = BitmapCacheOption.OnLoad;
-            bi.EndInit();
-            bi.Freeze();
-            var img = new Image { Source = bi };
-            _ = new InlineUIContainer(img, rtb.CaretPosition);
-            rtb.Focus();
-        }
-        catch { }
     }
     private void Window_KeyDown(object s, KeyEventArgs e) => VM.OnKeyDown(e);
 }
@@ -721,6 +682,12 @@ public class MainViewModel : INotifyPropertyChanged
     {
         if (Inspector.Element == sender)
             Inspector.NotifyTextChanged();
+    }
+
+    private void CanvasRichTextBox_SelectionChanged(object? sender, RoutedEventArgs e)
+    {
+        if (Inspector.Element == sender && Application.Current.MainWindow is MainWindow mw)
+            mw.UpdateFontToolbarFormatting();
     }
 
     private void ResizeFromCorner(Grid container, DragDeltaEventArgs e, int xDir, int yDir)
