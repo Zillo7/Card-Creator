@@ -132,72 +132,9 @@ namespace CardCreator.Models {
         }
       }
     }
-    public double FontSize { get=> (Element as RichTextBox)?.FontSize ?? 16; set{ if(Element is RichTextBox tb){ tb.FontSize=value; OnPropertyChanged(); } } }
-
+    public void NotifyTextChanged() => OnPropertyChanged(nameof(Text));
     public IEnumerable<FontFamily> FontFamilies { get; } = Fonts.SystemFontFamilies.OrderBy(f => f.Source);
-    public FontFamily FontFamily {
-      get => (Element as RichTextBox)?.FontFamily ?? Fonts.SystemFontFamilies.First();
-      set { if (Element is RichTextBox tb) { tb.FontFamily = value; OnPropertyChanged(); } }
-    }
-
-    public string FontStyleOption {
-      get {
-        if (Element is RichTextBox tb) {
-          bool bold = tb.FontWeight == FontWeights.Bold;
-          bool italic = tb.FontStyle == FontStyles.Italic;
-          if (bold && italic) return "Bold Italic";
-          if (bold) return "Bold";
-          if (italic) return "Italic";
-          return "None";
-        }
-        return "None";
-      }
-      set {
-        if (Element is RichTextBox tb) {
-          switch (value) {
-            case "Italic":
-              tb.FontStyle = FontStyles.Italic;
-              tb.FontWeight = FontWeights.Normal;
-              break;
-            case "Bold":
-              tb.FontStyle = FontStyles.Normal;
-              tb.FontWeight = FontWeights.Bold;
-              break;
-            case "Bold Italic":
-              tb.FontStyle = FontStyles.Italic;
-              tb.FontWeight = FontWeights.Bold;
-              break;
-            default:
-              tb.FontStyle = FontStyles.Normal;
-              tb.FontWeight = FontWeights.Normal;
-              break;
-          }
-          OnPropertyChanged();
-        }
-      }
-    }
-    public TextAlignment TextAlignment { get => (Element as RichTextBox)?.Document.TextAlignment ?? TextAlignment.Left; set { if (Element is RichTextBox tb) { tb.Document.TextAlignment = value; OnPropertyChanged(); } } }
-    public Color ForegroundColor {
-      get {
-        if (Element is RichTextBox tb && tb.Foreground is SolidColorBrush scb) return scb.Color;
-        return Colors.Black;
-      }
-      set {
-        if (Element is RichTextBox tb) {
-          tb.Foreground = new SolidColorBrush(value);
-          OnPropertyChanged();
-          OnPropertyChanged(nameof(ForegroundHex));
-          OnPropertyChanged(nameof(ForegroundBrush));
-        }
-      }
-    }
-    public SolidColorBrush ForegroundBrush => new SolidColorBrush(ForegroundColor);
-    public string ForegroundHex {
-      get => $"#{ForegroundColor.R:X2}{ForegroundColor.G:X2}{ForegroundColor.B:X2}";
-      set {
-        try { ForegroundColor = (Color)ColorConverter.ConvertFromString(value); } catch {}
-      }
-    }
+    public IEnumerable<double> FontSizes { get; } = new double[] { 8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72 };
     public bool IsHidden {
       get {
         if (Element == null) return false;
