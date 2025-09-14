@@ -1,39 +1,67 @@
 {
   "version": 3,
   "targets": {
-    "net8.0-windows7.0": {}
+    "net8.0-windows7.0": {
+      "Xceed.Wpf.Toolkit/4.5.22477.12540": {
+        "type": "package",
+        "compile": {
+          "lib/net5.0/Xceed.Wpf.Toolkit.NET5.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net5.0/Xceed.Wpf.Toolkit.NET5.dll": {
+            "related": ".xml"
+          }
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "Xceed.Wpf.Toolkit/4.5.22477.12540": {
+      "sha512": "GjxsRf37xSyYgsF/r47kgntyZxIHM0uHmyXZZEmu9YWbss8KRkbeMdvUmjb00HlVR8aB2qCwTNktaB7+ZiMzMw==",
+      "type": "package",
+      "path": "xceed.wpf.toolkit/4.5.22477.12540",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "License Agreement.txt",
+        "images/Toolkit.png",
+        "lib/net40/Xceed.Wpf.Toolkit.dll",
+        "lib/net40/Xceed.Wpf.Toolkit.xml",
+        "lib/net5.0/Xceed.Wpf.Toolkit.NET5.dll",
+        "lib/net5.0/Xceed.Wpf.Toolkit.NET5.xml",
+        "lib/netcoreapp3.0/Xceed.Wpf.Toolkit.NETCore.dll",
+        "lib/netcoreapp3.0/Xceed.Wpf.Toolkit.NETCore.xml",
+        "xceed.wpf.toolkit.4.5.22477.12540.nupkg.sha512",
+        "xceed.wpf.toolkit.nuspec"
+      ]
+    }
+  },
   "projectFileDependencyGroups": {
-    "net8.0-windows7.0": []
+    "net8.0-windows7.0": [
+      "Xceed.Wpf.Toolkit >= 4.5.2"
+    ]
   },
   "packageFolders": {
-    "C:\\Users\\brian\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "/root/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\CardCreator.csproj",
+      "projectUniqueName": "/workspace/Card-Creator/CardCreator/CardCreator.csproj",
       "projectName": "CardCreator",
-      "projectPath": "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\CardCreator.csproj",
-      "packagesPath": "C:\\Users\\brian\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\brian\\source\\repos\\Card-Creator\\CardCreator\\obj\\",
+      "projectPath": "/workspace/Card-Creator/CardCreator/CardCreator.csproj",
+      "packagesPath": "/root/.nuget/packages/",
+      "outputPath": "/workspace/Card-Creator/CardCreator/obj/",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\brian\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "/root/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0-windows"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -46,17 +74,17 @@
         "warnAsError": [
           "NU1605"
         ]
-      },
-      "restoreAuditProperties": {
-        "enableAudit": "true",
-        "auditLevel": "low",
-        "auditMode": "direct"
-      },
-      "SdkAnalysisLevel": "9.0.300"
+      }
     },
     "frameworks": {
       "net8.0-windows7.0": {
         "targetAlias": "net8.0-windows",
+        "dependencies": {
+          "Xceed.Wpf.Toolkit": {
+            "target": "Package",
+            "version": "[4.5.2, )"
+          }
+        },
         "imports": [
           "net461",
           "net462",
@@ -68,16 +96,31 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.WindowsDesktop.App.Ref",
+            "version": "[8.0.19, 8.0.19]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
-          },
-          "Microsoft.WindowsDesktop.App.WPF": {
-            "privateAssets": "none"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.119/PortableRuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1603",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "CardCreator depends on Xceed.Wpf.Toolkit (>= 4.5.2) but Xceed.Wpf.Toolkit 4.5.2 was not found. An approximate best match of Xceed.Wpf.Toolkit 4.5.22477.12540 was resolved.",
+      "libraryId": "Xceed.Wpf.Toolkit",
+      "targetGraphs": [
+        "net8.0-windows7.0"
+      ]
+    }
+  ]
 }
