@@ -66,7 +66,7 @@ public partial class MainWindow : Window
     {
         if (string.IsNullOrEmpty(e.PropertyName))
             UpdateFontToolbarFormatting();
-    }    
+    }
 
     private void UpdateRulerOrigins()
     {
@@ -910,6 +910,7 @@ public class MainViewModel : INotifyPropertyChanged
         var folderDlg = new WinForms.FolderBrowserDialog();
         if (folderDlg.ShowDialog() != WinForms.DialogResult.OK)
             return;
+        ClearSelection();
         string dir = folderDlg.SelectedPath;
         var prev = SelectedCard;
         for (int i = 0; i < Cards.Count; i++)
@@ -937,6 +938,7 @@ public class MainViewModel : INotifyPropertyChanged
                                            FileName = "Sheet", DefaultExt = _useJpeg ? ".jpg" : ".png" };
         if (fileDlg.ShowDialog() != true)
             return;
+        ClearSelection();
         int perSheet = _sheetColumns * _sheetRows;
         var images = new List<RenderTargetBitmap>();
         var prev = SelectedCard;
