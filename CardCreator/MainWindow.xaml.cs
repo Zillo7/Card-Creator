@@ -66,9 +66,7 @@ public partial class MainWindow : Window
     {
         if (string.IsNullOrEmpty(e.PropertyName))
             UpdateFontToolbarFormatting();
-    }
-
-    
+    }    
 
     private void UpdateRulerOrigins()
     {
