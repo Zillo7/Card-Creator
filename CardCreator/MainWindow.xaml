@@ -95,26 +95,40 @@
             </ComboBox>
             <ComboBox x:Name="FontSizeCombo" Width="60" IsEditable="True" ItemsSource="{Binding FontSizes}" SelectionChanged="FontSizeCombo_SelectionChanged" LostFocus="FontSizeCombo_LostFocus" KeyDown="FontSizeCombo_KeyDown"/>
             <Separator/>
-            <Button Command="EditingCommands.ToggleBold" CommandTarget="{Binding Element}" FontWeight="Bold" Content="B"/>
-            <Button Command="EditingCommands.ToggleItalic" CommandTarget="{Binding Element}" FontStyle="Italic" Content="I"/>
-            <Button Command="EditingCommands.ToggleUnderline" CommandTarget="{Binding Element}">
+            <Button Command="EditingCommands.ToggleBold" CommandTarget="{Binding Element}" FontWeight="Bold" Content="B" Width="20"/>
+            <Button Command="EditingCommands.ToggleItalic" CommandTarget="{Binding Element}" FontStyle="Italic" Content="I" Width="20"/>
+            <Button Command="EditingCommands.ToggleUnderline" CommandTarget="{Binding Element}" Width="20">
                 <TextBlock Text="U" TextDecorations="Underline"/>
             </Button>
-            <Button Click="ToggleStrikethrough_Click">
+            <Button Click="ToggleStrikethrough_Click" Width="24">
                 <TextBlock Text="abc" TextDecorations="Strikethrough"/>
             </Button>
             <Separator/>
             <Button Click="PickColor_Click" ToolTip="Text Color">
-                <Border x:Name="ForegroundPreview" Width="16" Height="16" Background="Black" BorderBrush="Black" BorderThickness="1"/>
+                <Border x:Name="ForegroundPreview" Width="16" Height="16" Background="Black" BorderBrush="Black" BorderThickness="1">
+                    <TextBlock Text="A" />
+                </Border>
             </Button>
             <Separator/>
-            <Button Command="EditingCommands.AlignLeft" CommandTarget="{Binding Element}" Content="L"/>
-            <Button Command="EditingCommands.AlignCenter" CommandTarget="{Binding Element}" Content="C"/>
-            <Button Command="EditingCommands.AlignRight" CommandTarget="{Binding Element}" Content="R"/>
-            <Button Command="EditingCommands.AlignJustify" CommandTarget="{Binding Element}" Content="J"/>
+            <Button Command="EditingCommands.AlignLeft" CommandTarget="{Binding Element}" ToolTip="Align Left">
+                <Image Source="/Icons/AlignLeft.png" Width="18" Height="18" />
+            </Button>
+            <Button Command="EditingCommands.AlignCenter" CommandTarget="{Binding Element}" ToolTip="Align Center">
+                <Image Source="/Icons/AlignCenter.png" Width="18" Height="18" />
+            </Button>
+            <Button Command="EditingCommands.AlignRight" CommandTarget="{Binding Element}" ToolTip="Align Right">
+                <Image Source="/Icons/AlignRight.png" Width="18" Height="18" />
+            </Button>
+            <Button Command="EditingCommands.AlignJustify" CommandTarget="{Binding Element}" ToolTip="Align Justify">
+                <Image Source="/Icons/AlignJustify.png" Width="18" Height="18" />
+            </Button>
             <Separator/>
-            <Button Command="EditingCommands.ToggleBullets" CommandTarget="{Binding Element}" Content="•"/>
-            <Button Command="EditingCommands.ToggleNumbering" CommandTarget="{Binding Element}" Content="1."/>
+            <Button Command="EditingCommands.ToggleBullets" CommandTarget="{Binding Element}" >
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8FD;" FontSize="16"/>
+            </Button>
+            <Button Command="EditingCommands.ToggleNumbering" CommandTarget="{Binding Element}">
+                <Image Source="/Icons/NumberedList.png" Width="18" Height="18" />
+            </Button>
             <Separator/>
             <Button Click="InsertImage_Click">
                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8B9;" FontSize="16"/>
