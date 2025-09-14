@@ -68,8 +68,6 @@ public partial class MainWindow : Window
             UpdateFontToolbarFormatting();
     }
 
-    
-
     private void UpdateRulerOrigins()
     {
         var originInH = CardCanvas.TranslatePoint(new Point(0, 0), RulerH);
