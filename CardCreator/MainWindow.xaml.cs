@@ -804,7 +804,7 @@ public class MainViewModel : INotifyPropertyChanged
                 double w = fe.Width;
                 double h = fe.Height;
                 var container = CreateContainer(fe, item.X, item.Y, w, h, useSnap: false);
-                if (fe is Image img && img.Visibility == Visibility.Visible)
+                if (fe is Image img && img.Visibility == Visibility.Visible && img.Source != null)
                     container.Background = Brushes.White;
                 if (fe.Tag is string t && !string.IsNullOrWhiteSpace(t))
                     container.Tag = t;
@@ -1082,8 +1082,8 @@ public class MainViewModel : INotifyPropertyChanged
         if (field.Hidden.HasValue)
         {
             el.Visibility = field.Hidden.Value ? Visibility.Hidden : Visibility.Visible;
-            if (el.Parent is Grid g && el is Image)
-                g.Background = field.Hidden.Value ? Brushes.Transparent : Brushes.White;
+            if (el.Parent is Grid g && el is Image img)
+                g.Background = (field.Hidden.Value || img.Source == null) ? Brushes.Transparent : Brushes.White;
         }
         if (el is RichTextBox tb)
         {
