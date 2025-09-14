@@ -591,9 +591,16 @@ public class MainViewModel : INotifyPropertyChanged
     {
         if (_canvas == null)
             return;
-        var tb = new RichTextBox { FontSize = 28, Foreground = Brushes.Black,
-                                 Background = Brushes.Transparent,
-                                 RenderTransformOrigin = new Point(0.5, 0.5) };
+        var tb = new RichTextBox
+        {
+            FontSize = 28,
+            Foreground = Brushes.Black,
+            Background = Brushes.Transparent,
+            BorderBrush = null,
+            BorderThickness = new Thickness(0),
+            FocusVisualStyle = null,
+            RenderTransformOrigin = new Point(0.5, 0.5)
+        };
         tb.Document = new FlowDocument(new Paragraph(new Run("Text")));
         var container = CreateContainer(tb, 60, 60, 180, 60);
         tb.Width = 180;

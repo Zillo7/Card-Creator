@@ -58,7 +58,13 @@ namespace CardCreator.Services {
           if(item.Hidden==true) img.Visibility=Visibility.Hidden;
           inner=img;
         } else {
-          var rtb=new RichTextBox{ FontSize=28, Background=Brushes.Transparent };
+          var rtb=new RichTextBox{
+            FontSize=28,
+            Background=Brushes.Transparent,
+            BorderBrush=null,
+            BorderThickness=new Thickness(0),
+            FocusVisualStyle=null
+          };
           if(!string.IsNullOrWhiteSpace(item.Text)){
             try{ rtb.Document=(FlowDocument)XamlReader.Parse(item.Text); }
             catch{ rtb.Document=new FlowDocument(new Paragraph(new Run(item.Text))); }
@@ -86,7 +92,13 @@ namespace CardCreator.Services {
       if(obj!=null){
         canvas.Children.Clear();
         foreach(UIElement child in obj.Children){
-          if(child is RichTextBox rtb){ rtb.IsHitTestVisible=true; rtb.Background=Brushes.Transparent; }
+          if(child is RichTextBox rtb){
+            rtb.IsHitTestVisible=true;
+            rtb.Background=Brushes.Transparent;
+            rtb.BorderBrush=null;
+            rtb.BorderThickness=new Thickness(0);
+            rtb.FocusVisualStyle=null;
+          }
           canvas.Children.Add(child);
         }
         model.CardWidth=obj.Width;
