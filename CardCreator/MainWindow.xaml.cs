@@ -560,7 +560,16 @@ public class MainViewModel : INotifyPropertyChanged
             return;
         if (e.Key == Key.Escape)
         {
-            if (_selected.Count > 0)
+            if (_selectedRtbImage != null)
+            {
+                if (_selectedRtbImage.Children.Count > 1 && _selectedRtbImage.Children[1] is Border b)
+                    b.Visibility = Visibility.Collapsed;
+                var rtb = FindAncestor<RichTextBox>(_selectedRtbImage);
+                _selectedRtbImage = null;
+                Inspector.SetElement(rtb);
+                e.Handled = true;
+            }
+            else if (_selected.Count > 0)
             {
                 ClearSelection();
                 e.Handled = true;
@@ -1422,6 +1431,12 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void OnInspectorPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (_selectedRtbImage != null && Inspector.Element != _selectedRtbImage.Children[0])
+        {
+            if (_selectedRtbImage.Children.Count > 1 && _selectedRtbImage.Children[1] is Border b)
+                b.Visibility = Visibility.Collapsed;
+            _selectedRtbImage = null;
+        }
         if (Inspector.Element == null)
             return;
         if (SelectedCard == null)
