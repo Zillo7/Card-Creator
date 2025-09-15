@@ -753,7 +753,7 @@ public class MainViewModel : INotifyPropertyChanged
         return container;
     }
 
-    private void InlineImage_PreviewMouseLeftButtonDown(object? sender, MouseButtonEventArgs e)
+    private void InlineImage_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         var iuic = FindAncestor<InlineUIContainer>(e.OriginalSource as DependencyObject);
         if (iuic?.Child is Grid grid)
@@ -785,7 +785,8 @@ public class MainViewModel : INotifyPropertyChanged
 
     internal void AttachRichTextImages(RichTextBox rtb)
     {
-        rtb.AddHandler(UIElement.PreviewMouseLeftButtonDownEvent, InlineImage_PreviewMouseLeftButtonDown, true);
+        rtb.AddHandler(UIElement.PreviewMouseLeftButtonDownEvent,
+            new MouseButtonEventHandler(InlineImage_PreviewMouseLeftButtonDown), true);
         TextPointer pointer = rtb.Document.ContentStart;
         while (pointer != null && pointer.CompareTo(rtb.Document.ContentEnd) < 0)
         {
