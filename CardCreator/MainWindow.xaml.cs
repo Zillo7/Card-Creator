@@ -755,18 +755,7 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void InlineImage_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (sender is not RichTextBox rtb)
-            return;
-        var pos = e.GetPosition(rtb);
-        var pointer = rtb.GetPositionFromPoint(pos, true);
-        InlineUIContainer? iuic = null;
-        if (pointer != null)
-        {
-            iuic = pointer.Parent as InlineUIContainer ??
-                   pointer.GetAdjacentElement(LogicalDirection.Backward) as InlineUIContainer ??
-                   pointer.GetAdjacentElement(LogicalDirection.Forward) as InlineUIContainer;
-        }
-        if (iuic?.Child is Grid grid)
+        if (FindAncestor<InlineUIContainer>(e.OriginalSource as DependencyObject) is { Child: Grid grid })
         {
             e.Handled = true;
             ClearSelection();
