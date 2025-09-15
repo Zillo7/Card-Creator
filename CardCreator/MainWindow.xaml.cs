@@ -703,6 +703,7 @@ public class MainViewModel : INotifyPropertyChanged
         {
             rtb.TextChanged += CanvasRichTextBox_TextChanged;
             rtb.SelectionChanged += CanvasRichTextBox_SelectionChanged;
+            AttachRichTextImages(rtb);
         }
         AttachContainerChrome(container);
         if (useSnap && SnapEnabled)
@@ -752,26 +753,27 @@ public class MainViewModel : INotifyPropertyChanged
         return container;
     }
 
-    private void InlineImage_PreviewMouseLeftButtonDown(object? sender, MouseButtonEventArgs e)
+    private void InlineImage_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        e.Handled = true;
-        Grid? grid = sender as Grid;
-        if (grid == null && sender is Image img && img.Parent is Grid g)
-            grid = g;
-        if (grid == null)
+        if (sender is RichTextBox && e.OriginalSource is Image)
             return;
-        ClearSelection();
-        _selectedRtbImage = grid;
-        if (grid.Children.Count > 1 && grid.Children[1] is Border b)
-            b.Visibility = Visibility.Visible;
-        Inspector.SetElement((FrameworkElement)grid.Children[0]);
+        var iuic = FindAncestor<InlineUIContainer>(e.OriginalSource as DependencyObject);
+        if (iuic?.Child is Grid grid)
+        {
+            e.Handled = true;
+            ClearSelection();
+            _selectedRtbImage = grid;
+            if (grid.Children.Count > 1 && grid.Children[1] is Border b)
+                b.Visibility = Visibility.Visible;
+            Inspector.SetElement((FrameworkElement)grid.Children[0]);
+        }
     }
 
     private void AttachInlineImageChrome(Grid container)
     {
         if (container.Children.Count == 0 || container.Children[0] is not Image img)
             return;
-        container.PreviewMouseLeftButtonDown += InlineImage_PreviewMouseLeftButtonDown;
+        img.PreviewMouseLeftButtonDown -= InlineImage_PreviewMouseLeftButtonDown;
         img.PreviewMouseLeftButtonDown += InlineImage_PreviewMouseLeftButtonDown;
         var selBorder = new Border
         {
@@ -787,6 +789,8 @@ public class MainViewModel : INotifyPropertyChanged
 
     internal void AttachRichTextImages(RichTextBox rtb)
     {
+        rtb.AddHandler(UIElement.PreviewMouseLeftButtonDownEvent,
+            new MouseButtonEventHandler(InlineImage_PreviewMouseLeftButtonDown), true);
         TextPointer pointer = rtb.Document.ContentStart;
         while (pointer != null && pointer.CompareTo(rtb.Document.ContentEnd) < 0)
         {
