@@ -755,6 +755,8 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void InlineImage_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (sender is RichTextBox && e.OriginalSource is Image)
+            return;
         var iuic = FindAncestor<InlineUIContainer>(e.OriginalSource as DependencyObject);
         if (iuic?.Child is Grid grid)
         {
@@ -771,6 +773,8 @@ public class MainViewModel : INotifyPropertyChanged
     {
         if (container.Children.Count == 0 || container.Children[0] is not Image img)
             return;
+        img.PreviewMouseLeftButtonDown -= InlineImage_PreviewMouseLeftButtonDown;
+        img.PreviewMouseLeftButtonDown += InlineImage_PreviewMouseLeftButtonDown;
         var selBorder = new Border
         {
             BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
