@@ -769,24 +769,43 @@ public class MainViewModel : INotifyPropertyChanged
         var pos = e.GetPosition(rtb);
         var pointer = rtb.GetPositionFromPoint(pos, true);
         InlineUIContainer? iuic = null;
-            if (pointer != null)
-            {
-                Paragraph para = pointer.Parent as Paragraph;
-                Run run = pointer.Parent as Run;
+        if (pointer != null)
+        {
+            Paragraph para = pointer.Parent as Paragraph;
+            Run run = pointer.Parent as Run;
 
-                if (para == null && run == null)
-                { iuic = pointer.Parent as InlineUIContainer; }
-                else { _selectedRtbImage = null; Inspector.SetElement(rtb); }
-                if (iuic?.Child is Grid grid)
-                {
-                    e.Handled = true;
-                    ClearSelection();
-                    _selectedRtbImage = grid;
-                    if (grid.Children.Count > 1 && grid.Children[1] is Border b)
-                        b.Visibility = Visibility.Visible;
-                    Inspector.SetElement((FrameworkElement)grid.Children[0]);
-                } }
-            else { _selectedRtbImage = null; Inspector.SetElement(rtb); }
+            if (para == null && run == null)
+            {
+                iuic = pointer.Parent as InlineUIContainer;
+            }
+            else
+            {
+                if (_selectedRtbImage != null &&
+                    _selectedRtbImage.Children.Count > 1 &&
+                    _selectedRtbImage.Children[1] is Border b)
+                    b.Visibility = Visibility.Collapsed;
+                _selectedRtbImage = null;
+                Inspector.SetElement(rtb);
+            }
+            if (iuic?.Child is Grid grid)
+            {
+                e.Handled = true;
+                ClearSelection();
+                _selectedRtbImage = grid;
+                if (grid.Children.Count > 1 && grid.Children[1] is Border b)
+                    b.Visibility = Visibility.Visible;
+                Inspector.SetElement((FrameworkElement)grid.Children[0]);
+            }
+        }
+        else
+        {
+            if (_selectedRtbImage != null &&
+                _selectedRtbImage.Children.Count > 1 &&
+                _selectedRtbImage.Children[1] is Border b)
+                b.Visibility = Visibility.Collapsed;
+            _selectedRtbImage = null;
+            Inspector.SetElement(rtb);
+        }
     }
 
     private void AttachInlineImageChrome(Grid container)
