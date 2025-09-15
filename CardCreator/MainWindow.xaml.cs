@@ -564,9 +564,8 @@ public class MainViewModel : INotifyPropertyChanged
             {
                 if (_selectedRtbImage.Children.Count > 1 && _selectedRtbImage.Children[1] is Border b)
                     b.Visibility = Visibility.Collapsed;
-                var rtb = FindAncestor<RichTextBox>(_selectedRtbImage);
                 _selectedRtbImage = null;
-                Inspector.SetElement(rtb);
+                ClearSelection();
                 e.Handled = true;
             }
             else if (_selected.Count > 0)

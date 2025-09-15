@@ -137,7 +137,7 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
-                <ColumnDefinition Width="360"/>
+                <ColumnDefinition Width="300"/>
             </Grid.ColumnDefinitions>
             <Grid Background="Transparent" MouseLeftButtonDown="Workspace_MouseLeftButtonDown">
                 <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="#FFEFF1F4" MouseLeftButtonDown="Workspace_MouseLeftButtonDown">
@@ -193,22 +193,22 @@
                                         <!--6-->
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="110"/>
+                                        <ColumnDefinition Width="60"/>
                                         <ColumnDefinition/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Name" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Name:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
                                     <TextBox Text="{Binding ControlName, UpdateSourceTrigger=PropertyChanged}" Grid.Row="0" Grid.Column="1"/>
-                                    <TextBlock Text="X" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="X:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
                                     <TextBox Text="{Binding X, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="1" Grid.Column="1"/>
-                                    <TextBlock Text="Y" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Y:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
                                     <TextBox Text="{Binding Y, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="2" Grid.Column="1"/>
-                                    <TextBlock Text="Width" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Width:" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
                                     <TextBox Text="{Binding WidthInput, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="1"/>
-                                    <TextBlock Text="Height" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Height:" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
                                     <TextBox Text="{Binding HeightInput, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4" Grid.Column="1"/>
-                                    <TextBlock Text="Rotation" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Rotation:" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
                                     <TextBox Text="{Binding Rotation, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="5" Grid.Column="1"/>
-                                    <TextBlock Text="Hidden" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Hidden:" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
                                     <CheckBox IsChecked="{Binding IsHidden, UpdateSourceTrigger=PropertyChanged}" Grid.Row="6" Grid.Column="1" IsEnabled="{Binding Element, Converter={StaticResource NullToBoolInverse}}"/>
                                 </Grid>
                                 
@@ -217,12 +217,12 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="60"/>
                                         <ColumnDefinition/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Image Source" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="File:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
                                     <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1">
-                                        <TextBox Width="140" Text="{Binding ImageSourcePath, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBox Width="130" Text="{Binding ImageSourcePath, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
                                         <Button Content="Browse…" Click="BrowseImage_Click" Margin="6,0,0,0"/>
                                     </StackPanel>
                                 </Grid>

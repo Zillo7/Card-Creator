@@ -3,7 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Card and Sheet Settings" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner">
     <StackPanel Margin="10">
-        <ComboBox ItemsSource="{Binding VM.Presets}" DisplayMemberPath="Name" SelectedItem="{Binding VM.SelectedPreset}" Margin="0,0,0,10"/>
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+            <TextBlock Text="Card Size: " />
+            <ComboBox ItemsSource="{Binding VM.Presets}" DisplayMemberPath="Name" SelectedItem="{Binding VM.SelectedPreset}" Margin="0,0,0,10" Width="169"/>
+        </StackPanel>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -15,26 +18,26 @@
                 <RowDefinition/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <TextBlock Text="Width (in)" VerticalAlignment="Center"/>
+            <TextBlock Text="Width (in):" VerticalAlignment="Center"/>
             <TextBox Grid.Column="1" Text="{Binding VM.WidthInch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=F2}" Margin="4,0"/>
-            <TextBlock Grid.Column="2" Text="Width (DIP)" Margin="10,0,0,0" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="2" Text="Width (DIP):" Margin="10,0,0,0" VerticalAlignment="Center"/>
             <TextBox Grid.Column="3" Text="{Binding VM.WidthDip, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Margin="4,0"/>
-            <TextBlock Grid.Row="1" Text="Height (in)" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="1" Text="Height (in):" VerticalAlignment="Center"/>
             <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding VM.HeightInch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=F2}" Margin="4,0"/>
-            <TextBlock Grid.Row="1" Grid.Column="2" Text="Height (DIP)" Margin="10,0,0,0" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="1" Grid.Column="2" Text="Height (DIP):" Margin="10,0,0,0" VerticalAlignment="Center"/>
             <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding VM.HeightDip, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Margin="4,0"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-            <TextBlock Text="Columns" VerticalAlignment="Center"/>
+            <TextBlock Text="Columns:" VerticalAlignment="Center"/>
             <TextBox x:Name="ColumnsBox" Width="60" Margin="10,0,0,0"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-            <TextBlock Text="Rows" VerticalAlignment="Center"/>
-            <TextBox x:Name="RowsBox" Width="60" Margin="37,0,0,0"/>
+            <TextBlock Text="      Rows:" VerticalAlignment="Center"/>
+            <TextBox x:Name="RowsBox" Width="60" Margin="10,0,0,0"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-            <TextBlock Text="Format" VerticalAlignment="Center"/>
-            <ComboBox x:Name="FormatBox" Width="80" Margin="28,0,0,0">
+            <TextBlock Text="Image File Format:" VerticalAlignment="Center"/>
+            <ComboBox x:Name="FormatBox" Width="80" Margin="4,0,0,0">
                 <ComboBoxItem Content="PNG"/>
                 <ComboBoxItem Content="JPEG"/>
             </ComboBox>
