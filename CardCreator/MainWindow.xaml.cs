@@ -755,9 +755,17 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void InlineImage_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (sender is RichTextBox && e.OriginalSource is Image)
+        if (sender is not RichTextBox rtb)
             return;
-        var iuic = FindAncestor<InlineUIContainer>(e.OriginalSource as DependencyObject);
+        var pos = e.GetPosition(rtb);
+        var pointer = rtb.GetPositionFromPoint(pos, true);
+        InlineUIContainer? iuic = null;
+        if (pointer != null)
+        {
+            iuic = pointer.Parent as InlineUIContainer ??
+                   pointer.GetAdjacentElement(LogicalDirection.Backward) as InlineUIContainer ??
+                   pointer.GetAdjacentElement(LogicalDirection.Forward) as InlineUIContainer;
+        }
         if (iuic?.Child is Grid grid)
         {
             e.Handled = true;
@@ -771,10 +779,8 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void AttachInlineImageChrome(Grid container)
     {
-        if (container.Children.Count == 0 || container.Children[0] is not Image img)
+        if (container.Children.Count == 0 || container.Children[0] is not Image)
             return;
-        img.PreviewMouseLeftButtonDown -= InlineImage_PreviewMouseLeftButtonDown;
-        img.PreviewMouseLeftButtonDown += InlineImage_PreviewMouseLeftButtonDown;
         var selBorder = new Border
         {
             BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0, 120, 215)),
