@@ -1180,11 +1180,17 @@ public class MainViewModel : INotifyPropertyChanged
         {
             if (obj is not Grid g || g.Children.Count == 0)
                 continue;
-            var inner = g.Children[0] as FrameworkElement;
-            if (inner == null)
+            if (g.Children[0] is not FrameworkElement inner)
                 continue;
             if (inner.Tag is string t && !string.IsNullOrWhiteSpace(t))
+            {
                 card.Fields[t] = CreateFieldFromElement(inner);
+                if (inner is RichTextBox rtb)
+                {
+                    foreach (var (element, name) in EnumerateNamedInlineElements(rtb))
+                        card.Fields[name] = CreateFieldFromElement(element);
+                }
+            }
         }
         Cards.Add(card);
         SelectedCard = card;
@@ -1207,13 +1213,20 @@ public class MainViewModel : INotifyPropertyChanged
         {
             if (obj is not Grid g || g.Children.Count == 0)
                 continue;
-            var inner = g.Children[0] as FrameworkElement;
-            if (inner == null)
+            if (g.Children[0] is not FrameworkElement inner)
                 continue;
             if (inner.Tag is not string name || string.IsNullOrWhiteSpace(name))
                 continue;
             if (SelectedCard.Fields.TryGetValue(name, out var field))
                 ApplyFieldToElement(inner, field);
+            if (inner is RichTextBox rtb)
+            {
+                foreach (var (element, inlineName) in EnumerateNamedInlineElements(rtb))
+                {
+                    if (SelectedCard.Fields.TryGetValue(inlineName, out var inlineField))
+                        ApplyFieldToElement(element, inlineField);
+                }
+            }
         }
         if (_selected.Count == 1)
         {
@@ -1383,20 +1396,85 @@ public class MainViewModel : INotifyPropertyChanged
         var list = new List<(string name, string type)>();
         if (_canvas == null)
             return list;
+        var seen = new HashSet<string>();
         foreach (var obj in _canvas.Children)
         {
             if (obj is not Grid g || g.Children.Count == 0)
                 continue;
-            var inner = g.Children[0] as FrameworkElement;
-            if (inner == null)
+            if (g.Children[0] is not FrameworkElement inner)
                 continue;
             if (inner.Tag is not string name || string.IsNullOrWhiteSpace(name))
                 continue;
-            var type = inner is RichTextBox ? "Text" : inner is Image ? "Image" : "";
-            if (type != "")
-                list.Add((name, type));
+            if (inner is RichTextBox rtb)
+            {
+                if (seen.Add(name))
+                    list.Add((name, "Text"));
+                foreach (var (_, inlineName) in EnumerateNamedInlineElements(rtb))
+                    if (seen.Add(inlineName))
+                        list.Add((inlineName, "Image"));
+            }
+            else if (inner is Image)
+            {
+                if (seen.Add(name))
+                    list.Add((name, "Image"));
+            }
         }
         return list;
+    }
+
+    private IEnumerable<(FrameworkElement element, string name)> EnumerateNamedInlineElements(RichTextBox rtb)
+    {
+        var seen = new HashSet<string>();
+        TextPointer pointer = rtb.Document.ContentStart;
+        while (pointer != null && pointer.CompareTo(rtb.Document.ContentEnd) < 0)
+        {
+            if (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.EmbeddedElement)
+            {
+                var ui = pointer.GetAdjacentElement(LogicalDirection.Forward) as UIElement;
+                if (ui != null && TryGetInlineElement(ui, out var element, out var name) && seen.Add(name))
+                    yield return (element, name);
+            }
+            pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+        }
+    }
+
+    private bool TryGetInlineElement(UIElement ui, out FrameworkElement element, out string name)
+    {
+        element = null!;
+        name = string.Empty;
+        FrameworkElement? candidate = ui as FrameworkElement;
+        if (ui is Grid grid)
+        {
+            Image? img = grid.Children.OfType<Image>().FirstOrDefault();
+            candidate = img ?? grid.Children.OfType<FrameworkElement>().FirstOrDefault() ?? grid;
+            name = (candidate.Tag as string) ?? (grid.Tag as string) ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name) && candidate.Parent is FrameworkElement parent)
+                name = parent.Tag as string ?? string.Empty;
+            if (candidate != img && img != null)
+            {
+                candidate = img;
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    name = (img.Tag as string) ?? (grid.Tag as string) ?? string.Empty;
+                    if (string.IsNullOrWhiteSpace(name) && img.Parent is FrameworkElement imgParent)
+                        name = imgParent.Tag as string ?? string.Empty;
+                }
+            }
+        }
+        else if (candidate != null)
+        {
+            name = candidate.Tag as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name) && candidate.Parent is FrameworkElement parent)
+                name = parent.Tag as string ?? string.Empty;
+        }
+        if (candidate != null && !string.IsNullOrWhiteSpace(name))
+        {
+            element = candidate;
+            return true;
+        }
+        element = null!;
+        name = string.Empty;
+        return false;
     }
 
     private string CsvEscape(string? s)
