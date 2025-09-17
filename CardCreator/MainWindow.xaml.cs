@@ -1299,38 +1299,43 @@ public class MainViewModel : INotifyPropertyChanged
             return;
         var controls = GetTemplateControls();
         var headers = new List<string> { "Name", "Quantity" };
+        var otherColumns = new List<(string control, string prop)>();
+        var textColumns = new List<(string control, string prop)>();
         foreach (var c in controls)
         {
             if (c.type == "Text")
             {
-                headers.Add($"{c.name}.Text");
-                headers.Add($"{c.name}.Hidden");
+                otherColumns.Add((c.name, "Hidden"));
+                textColumns.Add((c.name, "Text"));
             }
             else if (c.type == "Image")
             {
-                headers.Add($"{c.name}.Source");
-                headers.Add($"{c.name}.Hidden");
+                otherColumns.Add((c.name, "Source"));
+                otherColumns.Add((c.name, "Hidden"));
             }
         }
+        headers.AddRange(otherColumns.Select(col => $"{col.control}.{col.prop}"));
+        headers.AddRange(textColumns.Select(col => $"{col.control}.{col.prop}"));
         var sb = new StringBuilder();
         sb.AppendLine(string.Join(",", headers.Select(CsvEscape)));
         foreach (var card in Cards)
         {
             var values = new List<string> { CsvEscape(card.Name), CsvEscape(card.Quantity.ToString()) };
-            foreach (var c in controls)
+            string GetFieldValue(string control, string prop)
             {
-                card.Fields.TryGetValue(c.name, out var field);
-                if (c.type == "Text")
+                card.Fields.TryGetValue(control, out var field);
+                return prop switch
                 {
-                    values.Add(CsvEscape(field?.Text));
-                    values.Add(CsvEscape((field?.Hidden ?? false).ToString()));
-                }
-                else if (c.type == "Image")
-                {
-                    values.Add(CsvEscape(field?.Source));
-                    values.Add(CsvEscape((field?.Hidden ?? false).ToString()));
-                }
+                    "Text" => field?.Text ?? string.Empty,
+                    "Source" => field?.Source ?? string.Empty,
+                    "Hidden" => (field?.Hidden ?? false).ToString(),
+                    _ => string.Empty,
+                };
             }
+            foreach (var (control, prop) in otherColumns)
+                values.Add(CsvEscape(GetFieldValue(control, prop)));
+            foreach (var (control, prop) in textColumns)
+                values.Add(CsvEscape(GetFieldValue(control, prop)));
             sb.AppendLine(string.Join(",", values));
         }
         File.WriteAllText(dlg.FileName, sb.ToString());
