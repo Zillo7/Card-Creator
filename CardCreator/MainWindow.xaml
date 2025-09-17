@@ -198,10 +198,10 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="Name:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
                                     <TextBox Text="{Binding ControlName, UpdateSourceTrigger=PropertyChanged}" Grid.Row="0" Grid.Column="1"/>
-                                    <TextBlock Text="X:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
-                                    <TextBox Text="{Binding X, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="1" Grid.Column="1"/>
-                                    <TextBlock Text="Y:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
-                                    <TextBox Text="{Binding Y, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="2" Grid.Column="1"/>
+                                    <TextBlock Text="X:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right" Visibility="{Binding CanEditPosition, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBox Text="{Binding X, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="1" Grid.Column="1" Visibility="{Binding CanEditPosition, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="Y:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right" Visibility="{Binding CanEditPosition, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBox Text="{Binding Y, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}" Grid.Row="2" Grid.Column="1" Visibility="{Binding CanEditPosition, Converter={StaticResource BoolToVis}}"/>
                                     <TextBlock Text="Width:" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
                                     <TextBox Text="{Binding WidthInput, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="1"/>
                                     <TextBlock Text="Height:" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>

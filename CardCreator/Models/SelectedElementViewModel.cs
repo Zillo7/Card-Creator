@@ -16,7 +16,7 @@ namespace CardCreator.Models {
     public string? ElementType {get; private set;}
     public bool IsText => Element is RichTextBox;
     public bool IsImage => Element is Image;
-    public void SetElement(FrameworkElement? element){ Element=element; Container=element?.Parent as FrameworkElement; ElementType=element?.GetType().Name; OnPropertyChanged(string.Empty); }
+    public void SetElement(FrameworkElement? element){ Element=element; Container=element?.Parent as FrameworkElement; ElementType=element?.GetType().Name; OnPropertyChanged(string.Empty); OnPropertyChanged(nameof(CanEditPosition)); }
     public string ControlName {
       get => Element?.Tag as string ?? "";
       set {
@@ -34,6 +34,7 @@ namespace CardCreator.Models {
     public void RefreshPosition(){ OnPropertyChanged(nameof(X)); OnPropertyChanged(nameof(Y)); }
     public double X { get=>GetLeft(); set=>SetLeft(value); }
     public double Y { get=>GetTop(); set=>SetTop(value); }
+    public bool CanEditPosition => Container?.Parent is Canvas;
     public double Width {
       get => Container?.Width ?? Element?.Width ?? double.NaN;
       set {
