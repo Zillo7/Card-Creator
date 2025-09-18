@@ -109,6 +109,9 @@
                     <TextBlock Text="A" />
                 </Border>
             </Button>
+            <Button Click="PickBackgroundColor_Click" ToolTip="Background Color">
+                <Border x:Name="BackgroundPreview" Width="16" Height="16" Background="Transparent" BorderBrush="Black" BorderThickness="1"/>
+            </Button>
             <Separator/>
             <Button Command="EditingCommands.AlignLeft" CommandTarget="{Binding Element}" ToolTip="Align Left">
                 <Image Source="/Icons/AlignLeft.png" Width="18" Height="18" />

@@ -28,6 +28,7 @@ namespace CardCreator
 public partial class MainWindow : Window
 {
     public MainViewModel VM => (MainViewModel)DataContext;
+    private Color _richTextBackgroundColor = Colors.Transparent;
     public MainWindow()
     {
         Resources["NullToBoolInverse"] = new NullToBoolInverseConverter();
@@ -118,6 +119,22 @@ public partial class MainWindow : Window
             VM.Inspector.NotifyTextChanged();
         }
     }
+    private void PickBackgroundColor_Click(object s, RoutedEventArgs e)
+    {
+        var dlg = new WinForms.ColorDialog();
+        dlg.Color = DrawingColor.FromArgb(_richTextBackgroundColor.A, _richTextBackgroundColor.R, _richTextBackgroundColor.G, _richTextBackgroundColor.B);
+        if (dlg.ShowDialog() == WinForms.DialogResult.OK)
+        {
+            var color = Color.FromArgb(dlg.Color.A, dlg.Color.R, dlg.Color.G, dlg.Color.B);
+            _richTextBackgroundColor = color;
+            if (VM.Inspector.Element is RichTextBox rtb)
+            {
+                rtb.Background = new SolidColorBrush(color);
+                rtb.Focus();
+            }
+            BackgroundPreview.Background = new SolidColorBrush(color);
+        }
+    }
     private void ToggleStrikethrough_Click(object s, RoutedEventArgs e)
     {
         if (VM.Inspector.Element is not RichTextBox rtb)
@@ -201,6 +218,7 @@ public partial class MainWindow : Window
             FontFamilyCombo.SelectedItem = null;
             FontSizeCombo.Text = string.Empty;
             ForegroundPreview.Background = Brushes.Black;
+            BackgroundPreview.Background = new SolidColorBrush(_richTextBackgroundColor);
             return;
         }
         var sel = rtb.Selection;
@@ -219,6 +237,13 @@ public partial class MainWindow : Window
             ForegroundPreview.Background = scb;
         else
             ForegroundPreview.Background = Brushes.Black;
+        if (rtb.Background is SolidColorBrush bg)
+        {
+            _richTextBackgroundColor = bg.Color;
+            BackgroundPreview.Background = bg;
+        }
+        else
+            BackgroundPreview.Background = new SolidColorBrush(_richTextBackgroundColor);
     }
     private Color GetSelectionColor(RichTextBox rtb)
     {
@@ -633,7 +658,7 @@ public class MainViewModel : INotifyPropertyChanged
         {
             FontSize = 28,
             Foreground = Brushes.Black,
-            Background = Brushes.Transparent,
+            Background = new SolidColorBrush(_richTextBackgroundColor),
             BorderBrush = null,
             BorderThickness = new Thickness(0),
             FocusVisualStyle = null,
