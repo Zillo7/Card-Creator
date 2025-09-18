@@ -30,6 +30,8 @@ namespace CardCreator.Services {
         if(inner is RichTextBox rtb){
           item.Type="Text";
           try{ item.Text=XamlWriter.Save(rtb.Document); }catch{ item.Text=""; }
+          if(rtb.Background is SolidColorBrush bg)
+            item.Background=ColorToString(bg.Color);
         } else if(inner is TextBlock tb){
           item.Type="Text"; item.Text=XamlWriter.Save(new FlowDocument(new Paragraph(new Run(tb.Text??""))));
         } else if(inner is Image img){
@@ -60,7 +62,7 @@ namespace CardCreator.Services {
         } else {
           var rtb=new RichTextBox{
             FontSize=28,
-            Background=Brushes.Transparent,
+            Background=CreateBackgroundBrush(item.Background),
             BorderBrush=null,
             BorderThickness=new Thickness(0),
             FocusVisualStyle=null
@@ -94,7 +96,8 @@ namespace CardCreator.Services {
         foreach(UIElement child in obj.Children){
           if(child is RichTextBox rtb){
             rtb.IsHitTestVisible=true;
-            rtb.Background=Brushes.Transparent;
+            if(rtb.Background==null)
+              rtb.Background=Brushes.Transparent;
             rtb.BorderBrush=null;
             rtb.BorderThickness=new Thickness(0);
             rtb.FocusVisualStyle=null;
@@ -125,6 +128,8 @@ namespace CardCreator.Services {
         if(inner.Tag is string tag && !string.IsNullOrWhiteSpace(tag)) tagAttr=" Tag=\""+XmlEscape(tag)+"\"";
         if(inner is RichTextBox rtb){
           var attrs=" Width=\""+g.Width+"\" Height=\""+g.Height+"\" Canvas.Left=\""+x+"\" Canvas.Top=\""+y+"\""+tagAttr;
+          if(rtb.Background is SolidColorBrush bg)
+            attrs+=" Background=\""+ColorToString(bg.Color)+"\"";
           if(rtb.Visibility!=Visibility.Visible) attrs+=" Visibility=\""+rtb.Visibility+"\"";
           sb.AppendLine("  <RichTextBox"+attrs+">");
           var angle=GetRotation(inner);
@@ -162,6 +167,16 @@ namespace CardCreator.Services {
       File.WriteAllText(path, sb.ToString());
     }
 
+    private static Brush CreateBackgroundBrush(string? value){
+      if(string.IsNullOrWhiteSpace(value)) return Brushes.Transparent;
+      try{
+        var color=(Color)ColorConverter.ConvertFromString(value);
+        return new SolidColorBrush(color);
+      }catch{
+        return Brushes.Transparent;
+      }
+    }
+    private static string ColorToString(Color color)=>$"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
     private static string XmlEscape(string s){ return s.Replace("&","&amp;").Replace("<","&lt;").Replace(">","&gt;").Replace("\"","&quot;"); }
     private static double GetRotation(FrameworkElement el){
       if(el.RenderTransform is TransformGroup tg) foreach(var t in tg.Children) if(t is RotateTransform r) return r.Angle;
