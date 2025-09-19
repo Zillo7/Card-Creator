@@ -11,5 +11,6 @@ namespace CardCreator.Models {
     public string? Source {get;set;}
     public string? Stretch {get;set;}
     public bool? Hidden {get;set;}
+    public Dictionary<string,string> Placeholders {get;} = new();
   }
 }

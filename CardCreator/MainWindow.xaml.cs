@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -306,6 +307,7 @@ public class MainViewModel : INotifyPropertyChanged
     public SelectedElementViewModel Inspector { get; } = new();
     private readonly List<Grid> _selected = new();
     private Grid? _selectedRtbImage;
+    private static readonly Regex PlaceholderRegex = new(@"\[(.+?)\]");
     private double _cardWidth = 240;
     public double CardWidth
     {
@@ -1219,11 +1221,19 @@ public class MainViewModel : INotifyPropertyChanged
                 continue;
             if (inner.Tag is string t && !string.IsNullOrWhiteSpace(t))
             {
-                card.Fields[t] = CreateFieldFromElement(inner);
+                CardField? existingField = null;
+                if (SelectedCard != null)
+                    SelectedCard.Fields.TryGetValue(t, out existingField);
+                card.Fields[t] = CreateFieldFromElement(inner, existingField);
                 if (inner is RichTextBox rtb)
                 {
                     foreach (var (element, name) in EnumerateNamedInlineElements(rtb))
-                        card.Fields[name] = CreateFieldFromElement(element);
+                    {
+                        CardField? existingInlineField = null;
+                        if (SelectedCard != null)
+                            SelectedCard.Fields.TryGetValue(name, out existingInlineField);
+                        card.Fields[name] = CreateFieldFromElement(element, existingInlineField);
+                    }
                 }
             }
         }
@@ -1270,13 +1280,23 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private CardField CreateFieldFromElement(FrameworkElement el)
+    private CardField CreateFieldFromElement(FrameworkElement el, CardField? existingField = null)
     {
         var field = new CardField();
+        if (existingField != null)
+        {
+            foreach (var kvp in existingField.Placeholders)
+                field.Placeholders[kvp.Key] = kvp.Value;
+        }
         field.Hidden = el.Visibility != Visibility.Visible;
         if (el is RichTextBox tb)
         {
             try { field.Text = XamlWriter.Save(tb.Document); } catch { field.Text = string.Empty; }
+            foreach (var placeholder in ExtractPlaceholders(tb.Document))
+            {
+                if (!field.Placeholders.ContainsKey(placeholder))
+                    field.Placeholders[placeholder] = string.Empty;
+            }
         }
         else if (el is Image img)
         {
@@ -1285,6 +1305,158 @@ public class MainViewModel : INotifyPropertyChanged
             field.Stretch = img.Stretch.ToString();
         }
         return field;
+    }
+
+    private IEnumerable<string> ExtractPlaceholders(FlowDocument doc)
+    {
+        var text = new TextRange(doc.ContentStart, doc.ContentEnd).Text;
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (Match match in PlaceholderRegex.Matches(text))
+        {
+            var key = match.Groups[1].Value.Trim();
+            if (!string.IsNullOrEmpty(key) && seen.Add(key))
+                yield return key;
+        }
+        yield break;
+    }
+
+    private void ApplyPlaceholdersToDocument(FlowDocument doc, IReadOnlyDictionary<string, string> values)
+    {
+        if (doc == null || values.Count == 0)
+            return;
+        ReplacePlaceholdersInFlowDocument(doc, values);
+    }
+
+    private void ReplacePlaceholdersInFlowDocument(FlowDocument document, IReadOnlyDictionary<string, string> values)
+    {
+        foreach (var block in document.Blocks.ToList())
+            ReplacePlaceholdersInTextElement(block, values);
+    }
+
+    private void ReplacePlaceholdersInTextElement(TextElement element, IReadOnlyDictionary<string, string> values)
+    {
+        switch (element)
+        {
+        case Run run:
+            var text = run.Text;
+            if (!string.IsNullOrEmpty(text))
+            {
+                var replaced = PlaceholderRegex.Replace(text, m =>
+                {
+                    var key = m.Groups[1].Value.Trim();
+                    return values.TryGetValue(key, out var replacement) ? replacement : m.Value;
+                });
+                if (!ReferenceEquals(text, replaced) && replaced != text)
+                    run.Text = replaced;
+            }
+            break;
+        case Paragraph paragraph:
+            foreach (var inline in paragraph.Inlines.ToList())
+                ReplacePlaceholdersInTextElement(inline, values);
+            break;
+        case Span span:
+            foreach (var inline in span.Inlines.ToList())
+                ReplacePlaceholdersInTextElement(inline, values);
+            break;
+        case Section section:
+            foreach (var block in section.Blocks.ToList())
+                ReplacePlaceholdersInTextElement(block, values);
+            break;
+        case FlowDocument document:
+            ReplacePlaceholdersInFlowDocument(document, values);
+            break;
+        case List list:
+            foreach (var item in list.ListItems)
+                ReplacePlaceholdersInTextElement(item, values);
+            break;
+        case ListItem listItem:
+            foreach (var block in listItem.Blocks.ToList())
+                ReplacePlaceholdersInTextElement(block, values);
+            break;
+        case Table table:
+            foreach (var group in table.RowGroups)
+                foreach (var row in group.Rows)
+                    foreach (var cell in row.Cells)
+                        ReplacePlaceholdersInTextElement(cell, values);
+            break;
+        case TableCell cell:
+            foreach (var block in cell.Blocks.ToList())
+                ReplacePlaceholdersInTextElement(block, values);
+            break;
+        case Figure figure:
+            foreach (var block in figure.Blocks.ToList())
+                ReplacePlaceholdersInTextElement(block, values);
+            break;
+        case Floater floater:
+            foreach (var block in floater.Blocks.ToList())
+                ReplacePlaceholdersInTextElement(block, values);
+            break;
+        }
+    }
+
+    private Dictionary<string, HashSet<string>> GetPlaceholderMapFromCards()
+    {
+        var map = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        foreach (var card in Cards)
+        {
+            foreach (var kvp in card.Fields)
+            {
+                if (kvp.Value.Placeholders.Count == 0)
+                    continue;
+                if (!map.TryGetValue(kvp.Key, out var set))
+                {
+                    set = new HashSet<string>(StringComparer.Ordinal);
+                    map[kvp.Key] = set;
+                }
+                foreach (var key in kvp.Value.Placeholders.Keys)
+                    set.Add(key);
+            }
+        }
+        return map;
+    }
+
+    private Dictionary<string, HashSet<string>> GetPlaceholderMapFromTemplate()
+    {
+        var map = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        if (_canvas == null)
+            return map;
+        foreach (var obj in _canvas.Children)
+        {
+            if (obj is not Grid g || g.Children.Count == 0)
+                continue;
+            if (g.Children[0] is not FrameworkElement inner)
+                continue;
+            if (inner.Tag is not string name || string.IsNullOrWhiteSpace(name))
+                continue;
+            if (inner is RichTextBox rtb)
+            {
+                foreach (var placeholder in ExtractPlaceholders(rtb.Document))
+                {
+                    if (!map.TryGetValue(name, out var set))
+                    {
+                        set = new HashSet<string>(StringComparer.Ordinal);
+                        map[name] = set;
+                    }
+                    set.Add(placeholder);
+                }
+            }
+        }
+        return map;
+    }
+
+    private bool TryParsePlaceholderColumn(string value, out string placeholder)
+    {
+        placeholder = string.Empty;
+        if (value.Length >= 2 && value.StartsWith('[') && value.EndsWith(']'))
+        {
+            var inner = value.Substring(1, value.Length - 2).Trim();
+            if (!string.IsNullOrEmpty(inner))
+            {
+                placeholder = inner;
+                return true;
+            }
+        }
+        return false;
     }
 
     private void ApplyFieldToElement(FrameworkElement el, CardField field)
@@ -1302,6 +1474,7 @@ public class MainViewModel : INotifyPropertyChanged
                 try { tb.Document = (FlowDocument)XamlReader.Parse(field.Text); }
                 catch { tb.Document = new FlowDocument(new Paragraph(new Run(field.Text))); }
             }
+            ApplyPlaceholdersToDocument(tb.Document, field.Placeholders);
         }
         else if (el is Image img)
         {
@@ -1336,12 +1509,26 @@ public class MainViewModel : INotifyPropertyChanged
         var headers = new List<string> { "Name", "Quantity" };
         var otherColumns = new List<(string control, string prop)>();
         var textColumns = new List<(string control, string prop)>();
+        var placeholderColumns = new List<(string control, string placeholder)>();
+        var placeholderColumnKeys = new HashSet<string>(StringComparer.Ordinal);
+        var placeholderMap = GetPlaceholderMapFromCards();
+        if (placeholderMap.Count == 0)
+            placeholderMap = GetPlaceholderMapFromTemplate();
         foreach (var c in controls)
         {
             if (c.type == "Text")
             {
                 otherColumns.Add((c.name, "Hidden"));
                 textColumns.Add((c.name, "Text"));
+                if (placeholderMap.TryGetValue(c.name, out var placeholders))
+                {
+                    foreach (var placeholder in placeholders.OrderBy(p => p, StringComparer.Ordinal))
+                    {
+                        var key = $"{c.name}\u001f{placeholder}";
+                        if (placeholderColumnKeys.Add(key))
+                            placeholderColumns.Add((c.name, placeholder));
+                    }
+                }
             }
             else if (c.type == "Image")
             {
@@ -1350,6 +1537,7 @@ public class MainViewModel : INotifyPropertyChanged
             }
         }
         headers.AddRange(otherColumns.Select(col => $"{col.control}.{col.prop}"));
+        headers.AddRange(placeholderColumns.Select(col => $"{col.control}.[{col.placeholder}]"));
         headers.AddRange(textColumns.Select(col => $"{col.control}.{col.prop}"));
         var sb = new StringBuilder();
         sb.AppendLine(string.Join(",", headers.Select(CsvEscape)));
@@ -1367,8 +1555,17 @@ public class MainViewModel : INotifyPropertyChanged
                     _ => string.Empty,
                 };
             }
+            string GetPlaceholderValue(string control, string key)
+            {
+                if (card.Fields.TryGetValue(control, out var field) &&
+                    field.Placeholders.TryGetValue(key, out var val) && val != null)
+                    return val;
+                return string.Empty;
+            }
             foreach (var (control, prop) in otherColumns)
                 values.Add(CsvEscape(GetFieldValue(control, prop)));
+            foreach (var (control, placeholder) in placeholderColumns)
+                values.Add(CsvEscape(GetPlaceholderValue(control, placeholder)));
             foreach (var (control, prop) in textColumns)
                 values.Add(CsvEscape(GetFieldValue(control, prop)));
             sb.AppendLine(string.Join(",", values));
@@ -1387,12 +1584,17 @@ public class MainViewModel : INotifyPropertyChanged
         if (lines.Length == 0)
             return;
         var headers = ParseCsvLine(lines[0]);
-        var columns = new List<(string control, string prop)>();
+        var columns = new List<(string control, string? prop, string? placeholder)>();
         for (int i = 2; i < headers.Count; i++)
         {
             var parts = headers[i].Split('.', 2);
             if (parts.Length == 2)
-                columns.Add((parts[0], parts[1]));
+            {
+                if (TryParsePlaceholderColumn(parts[1], out var placeholder))
+                    columns.Add((parts[0], null, placeholder));
+                else
+                    columns.Add((parts[0], parts[1], null));
+            }
         }
         Cards.Clear();
         for (int li = 1; li < lines.Length; li++)
@@ -1405,13 +1607,18 @@ public class MainViewModel : INotifyPropertyChanged
             card.Quantity = row.Count > 1 && int.TryParse(row[1], out var q) ? q : 1;
             for (int ci = 2; ci < row.Count && ci - 2 < columns.Count; ci++)
             {
-                var (control, prop) = columns[ci - 2];
+                var (control, prop, placeholder) = columns[ci - 2];
                 if (!card.Fields.TryGetValue(control, out var field))
                 {
                     field = new CardField();
                     card.Fields[control] = field;
                 }
                 var val = row[ci];
+                if (placeholder != null)
+                {
+                    field.Placeholders[placeholder] = val;
+                    continue;
+                }
                 switch (prop)
                 {
                 case "Text":
@@ -1586,7 +1793,8 @@ public class MainViewModel : INotifyPropertyChanged
         case nameof(SelectedElementViewModel.ImageSourcePath):
         case nameof(SelectedElementViewModel.ImageStretch):
         case nameof(SelectedElementViewModel.IsHidden):
-            SelectedCard.Fields[name] = CreateFieldFromElement(Inspector.Element);
+            SelectedCard.Fields.TryGetValue(name, out var existingField);
+            SelectedCard.Fields[name] = CreateFieldFromElement(Inspector.Element, existingField);
             break;
         case nameof(SelectedElementViewModel.ControlName):
             var newName = Inspector.ControlName;
