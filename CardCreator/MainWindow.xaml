@@ -95,12 +95,12 @@
             </ComboBox>
             <ComboBox x:Name="FontSizeCombo" Width="60" IsEditable="True" ItemsSource="{Binding FontSizes}" SelectionChanged="FontSizeCombo_SelectionChanged" LostFocus="FontSizeCombo_LostFocus" KeyDown="FontSizeCombo_KeyDown"/>
             <Separator/>
-            <Button Command="EditingCommands.ToggleBold" CommandTarget="{Binding Element}" FontWeight="Bold" Content="B" Width="20"/>
-            <Button Command="EditingCommands.ToggleItalic" CommandTarget="{Binding Element}" FontStyle="Italic" Content="I" Width="20"/>
-            <Button Command="EditingCommands.ToggleUnderline" CommandTarget="{Binding Element}" Width="20">
+            <Button Command="EditingCommands.ToggleBold" CommandTarget="{Binding Element}" FontWeight="Bold" Content="B" Width="20" ToolTip="Bold"/>
+            <Button Command="EditingCommands.ToggleItalic" CommandTarget="{Binding Element}" FontStyle="Italic" Content="I" Width="20" ToolTip="Italic"/>
+            <Button Command="EditingCommands.ToggleUnderline" CommandTarget="{Binding Element}" Width="20" ToolTip="Underline">
                 <TextBlock Text="U" TextDecorations="Underline"/>
             </Button>
-            <Button Click="ToggleStrikethrough_Click" Width="24">
+            <Button Click="ToggleStrikethrough_Click" Width="24" ToolTip="Strikethrough">
                 <TextBlock Text="abc" TextDecorations="Strikethrough"/>
             </Button>
             <Separator/>
@@ -126,14 +126,14 @@
                 <Image Source="/Icons/AlignJustify.png" Width="18" Height="18" />
             </Button>
             <Separator/>
-            <Button Command="EditingCommands.ToggleBullets" CommandTarget="{Binding Element}" >
+            <Button Command="EditingCommands.ToggleBullets" CommandTarget="{Binding Element}" ToolTip="Bulleted List">
                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8FD;" FontSize="16"/>
             </Button>
-            <Button Command="EditingCommands.ToggleNumbering" CommandTarget="{Binding Element}">
+            <Button Command="EditingCommands.ToggleNumbering" CommandTarget="{Binding Element}" ToolTip="Numbered List">
                 <Image Source="/Icons/NumberedList.png" Width="18" Height="18" />
             </Button>
             <Separator/>
-            <Button Click="InsertImage_Click">
+            <Button Click="InsertImage_Click" ToolTip="Insert Image">
                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8B9;" FontSize="16"/>
             </Button>
         </ToolBar>
@@ -230,7 +230,7 @@
                                         <Button Content="Browse…" Click="BrowseImage_Click" Margin="6,0,0,0"/>
                                     </StackPanel>
                                     <TextBlock Text="Stretch:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
-                                    <ComboBox Grid.Row="1" Grid.Column="1" Width="130" ItemsSource="{Binding StretchModes}" SelectedItem="{Binding ImageStretch, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <ComboBox Grid.Row="1" Grid.Column="1" Width="130" HorizontalAlignment="Left" ItemsSource="{Binding StretchModes}" SelectedItem="{Binding ImageStretch, UpdateSourceTrigger=PropertyChanged}"/>
                                 </Grid>
                             </StackPanel>
                         </StackPanel>

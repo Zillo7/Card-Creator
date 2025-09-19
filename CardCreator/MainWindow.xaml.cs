@@ -668,7 +668,7 @@ public class MainViewModel : INotifyPropertyChanged
         {
             FontSize = 28,
             Foreground = Brushes.Black,
-            Background = new SolidColorBrush(_richTextBackgroundColor),
+            Background = Brushes.Transparent,
             BorderBrush = null,
             BorderThickness = new Thickness(0),
             FocusVisualStyle = null,
