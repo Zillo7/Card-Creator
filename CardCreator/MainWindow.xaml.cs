@@ -1507,9 +1507,7 @@ public class MainViewModel : INotifyPropertyChanged
             return;
         var controls = GetTemplateControls();
         var headers = new List<string> { "Name", "Quantity" };
-        var otherColumns = new List<(string control, string prop)>();
-        var textColumns = new List<(string control, string prop)>();
-        var placeholderColumns = new List<(string control, string placeholder)>();
+        var columns = new List<(string control, string? prop, string? placeholder)>();
         var placeholderColumnKeys = new HashSet<string>(StringComparer.Ordinal);
         var placeholderMap = GetPlaceholderMapFromCards();
         if (placeholderMap.Count == 0)
@@ -1518,28 +1516,27 @@ public class MainViewModel : INotifyPropertyChanged
         {
             if (c.type == "Text")
             {
-                otherColumns.Add((c.name, "Hidden"));
-                textColumns.Add((c.name, "Text"));
+                columns.Add((c.name, "Hidden", null));
                 if (placeholderMap.TryGetValue(c.name, out var placeholders))
                 {
                     foreach (var placeholder in placeholders.OrderBy(p => p, StringComparer.Ordinal))
                     {
                         var key = $"{c.name}\u001f{placeholder}";
                         if (placeholderColumnKeys.Add(key))
-                            placeholderColumns.Add((c.name, placeholder));
-                    }
-                }
+                columns.Add((c.name, "Text", null));
             }
             else if (c.type == "Image")
             {
-                otherColumns.Add((c.name, "Source"));
-                otherColumns.Add((c.name, "Hidden"));
+                columns.Add((c.name, "Source", null));
+                columns.Add((c.name, "Hidden", null));
             }
         }
-        headers.AddRange(otherColumns.Select(col => $"{col.control}.{col.prop}"));
-        headers.AddRange(placeholderColumns.Select(col => $"{col.control}.[{col.placeholder}]"));
-        headers.AddRange(textColumns.Select(col => $"{col.control}.{col.prop}"));
-        headers.AddRange(placeholderColumns.Select(col => $"{col.control}.[{col.placeholder}]"));
+        headers.AddRange(columns.Select(col =>
+        {
+            if (col.placeholder != null)
+                return $"{col.control}.[{col.placeholder}]";
+            return $"{col.control}.{col.prop}";
+        }));
         var sb = new StringBuilder();
         sb.AppendLine(string.Join(",", headers.Select(CsvEscape)));
         foreach (var card in Cards)
@@ -1563,14 +1560,15 @@ public class MainViewModel : INotifyPropertyChanged
                     return val;
                 return string.Empty;
             }
-            foreach (var (control, prop) in otherColumns)
-                values.Add(CsvEscape(GetFieldValue(control, prop)));
-            foreach (var (control, placeholder) in placeholderColumns)
-                values.Add(CsvEscape(GetPlaceholderValue(control, placeholder)));
-            foreach (var (control, prop) in textColumns)
-                values.Add(CsvEscape(GetFieldValue(control, prop)));
-            foreach (var (control, placeholder) in placeholderColumns)
-                values.Add(CsvEscape(GetPlaceholderValue(control, placeholder)));
+            foreach (var (control, prop, placeholder) in columns)
+            {
+                if (placeholder != null)
+                {
+                    values.Add(CsvEscape(GetPlaceholderValue(control, placeholder)));
+                    continue;
+                }
+                values.Add(CsvEscape(GetFieldValue(control, prop!)));
+            }
             sb.AppendLine(string.Join(",", values));
         }
         File.WriteAllText(dlg.FileName, sb.ToString());
