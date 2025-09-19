@@ -146,8 +146,8 @@ namespace CardCreator.Models {
       set {
         if (Element == null) return;
         Element.Visibility = value ? Visibility.Hidden : Visibility.Visible;
-        if (Element.Parent is Grid g && Element is Image img)
-          g.Background = (value || img.Source == null) ? Brushes.Transparent : Brushes.White;
+        if (Element.Parent is Grid g && Element is Image)
+          g.Background = Brushes.Transparent;
         OnPropertyChanged();
       }
     }

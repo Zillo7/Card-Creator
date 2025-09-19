@@ -85,7 +85,7 @@ namespace CardCreator.Services {
         if(!string.IsNullOrWhiteSpace(item.ControlName)) inner.Name=item.ControlName;
         inner.RenderTransformOrigin=new Point(0.5,0.5);
         ApplyRotation(inner, item.Rotation);
-        var container=new Grid{ Background=item.Type=="Image" ? (item.Hidden==true || string.IsNullOrWhiteSpace(item.Source) ? Brushes.Transparent : Brushes.White) : Brushes.Transparent, Width=item.Width, Height=item.Height };
+        var container=new Grid{ Background=Brushes.Transparent, Width=item.Width, Height=item.Height };
         if(!string.IsNullOrWhiteSpace(item.ControlName)) { inner.Tag=item.ControlName; container.Tag=item.ControlName; }
         container.Children.Add(inner);
         Canvas.SetLeft(container,item.X); Canvas.SetTop(container,item.Y);
