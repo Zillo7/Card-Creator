@@ -1324,7 +1324,13 @@ public class MainViewModel : INotifyPropertyChanged
     {
         if (doc == null || values.Count == 0)
             return;
-        ReplacePlaceholdersInTextElement(doc, values);
+        ReplacePlaceholdersInFlowDocument(doc, values);
+    }
+
+    private void ReplacePlaceholdersInFlowDocument(FlowDocument document, IReadOnlyDictionary<string, string> values)
+    {
+        foreach (var block in document.Blocks.ToList())
+            ReplacePlaceholdersInTextElement(block, values);
     }
 
     private void ReplacePlaceholdersInTextElement(TextElement element, IReadOnlyDictionary<string, string> values)
@@ -1357,8 +1363,7 @@ public class MainViewModel : INotifyPropertyChanged
                 ReplacePlaceholdersInTextElement(block, values);
             break;
         case FlowDocument document:
-            foreach (var block in document.Blocks.ToList())
-                ReplacePlaceholdersInTextElement(block, values);
+            ReplacePlaceholdersInFlowDocument(document, values);
             break;
         case List list:
             foreach (var item in list.ListItems)
