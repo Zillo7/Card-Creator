@@ -82,6 +82,7 @@ namespace CardCreator.Services {
         if(!string.IsNullOrWhiteSpace(item.ControlName)) { inner.Tag=item.ControlName; container.Tag=item.ControlName; }
         container.Children.Add(inner);
         Canvas.SetLeft(container,item.X); Canvas.SetTop(container,item.Y);
+        Panel.SetZIndex(container,item.Z);
         canvas.Children.Add(container);
       }
       return model;
