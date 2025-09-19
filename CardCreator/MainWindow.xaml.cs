@@ -1539,6 +1539,7 @@ public class MainViewModel : INotifyPropertyChanged
         headers.AddRange(otherColumns.Select(col => $"{col.control}.{col.prop}"));
         headers.AddRange(placeholderColumns.Select(col => $"{col.control}.[{col.placeholder}]"));
         headers.AddRange(textColumns.Select(col => $"{col.control}.{col.prop}"));
+        headers.AddRange(placeholderColumns.Select(col => $"{col.control}.[{col.placeholder}]"));
         var sb = new StringBuilder();
         sb.AppendLine(string.Join(",", headers.Select(CsvEscape)));
         foreach (var card in Cards)
@@ -1568,6 +1569,8 @@ public class MainViewModel : INotifyPropertyChanged
                 values.Add(CsvEscape(GetPlaceholderValue(control, placeholder)));
             foreach (var (control, prop) in textColumns)
                 values.Add(CsvEscape(GetFieldValue(control, prop)));
+            foreach (var (control, placeholder) in placeholderColumns)
+                values.Add(CsvEscape(GetPlaceholderValue(control, placeholder)));
             sb.AppendLine(string.Join(",", values));
         }
         File.WriteAllText(dlg.FileName, sb.ToString());
