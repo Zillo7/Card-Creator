@@ -18,12 +18,19 @@ namespace CardCreator.Services {
 
     public static void SaveToJson(Canvas canvas, string path, double cardW, double cardH, int sheetCols, int sheetRows){
       var model=new TemplateModel{ CardWidth=cardW, CardHeight=cardH, SheetColumns=sheetCols, SheetRows=sheetRows };
-      int z=0;
-      foreach(var obj in canvas.Children){
-        if(obj is not Grid g || g.Children.Count==0) continue;
+      var orderedContainers=canvas.Children
+        .OfType<UIElement>()
+        .Select((child,index)=>new{child,index})
+        .Where(item=>item.child is Grid grid && grid.Children.Count>0)
+        .OrderBy(item=>Panel.GetZIndex(item.child))
+        .ThenBy(item=>item.index)
+        .Select(item=>(Grid)item.child)
+        .ToList();
+
+      foreach(var g in orderedContainers){
         var inner=(FrameworkElement)g.Children[0];
         var item=new TemplateItem{
-          X=Canvas.GetLeft(g), Y=Canvas.GetTop(g), Width=g.Width, Height=g.Height, Rotation=GetRotation(inner), Z=z++,
+          X=Canvas.GetLeft(g), Y=Canvas.GetTop(g), Width=g.Width, Height=g.Height, Rotation=GetRotation(inner), Z=Panel.GetZIndex(g),
           Hidden=inner.Visibility!=Visibility.Visible,
           ControlName=inner.Tag is string t && !string.IsNullOrWhiteSpace(t) ? t : null
         };

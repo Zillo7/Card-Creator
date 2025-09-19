@@ -1905,11 +1905,55 @@ namespace CardCreator
         {
             if (_canvas == null || _selected.Count == 0)
                 return;
-            foreach (var c in _selected)
+            var ordered = _canvas.Children
+                .OfType<UIElement>()
+                .Select((child, index) => new { child, index })
+                .OrderBy(item => Panel.GetZIndex(item.child))
+                .ThenBy(item => item.index)
+                .Select(item => item.child)
+                .ToList();
+
+            if (ordered.Count <= 1)
+                return;
+
+            var indexMap = ordered
+                .Select((child, index) => (child, index))
+                .ToDictionary(item => item.child, item => item.index);
+
+            void Swap(int first, int second)
             {
-                int current = Panel.GetZIndex(c);
-                Panel.SetZIndex(c, current + delta);
+                if (first == second)
+                    return;
+                (ordered[first], ordered[second]) = (ordered[second], ordered[first]);
+                indexMap[ordered[first]] = first;
+                indexMap[ordered[second]] = second;
             }
+
+            if (delta == 0)
+                return;
+
+            var processList = _selected
+                .Where(c => indexMap.ContainsKey(c))
+                .ToList();
+
+            var toProcess = delta > 0
+                ? processList.OrderByDescending(c => indexMap[c])
+                : processList.OrderBy(c => indexMap[c]);
+
+            foreach (var c in toProcess)
+            {
+                if (!indexMap.TryGetValue(c, out int currentIndex))
+                    continue;
+
+                int targetIndex = currentIndex + Math.Sign(delta);
+                if (targetIndex < 0 || targetIndex >= ordered.Count)
+                    continue;
+
+                Swap(currentIndex, targetIndex);
+            }
+
+            for (int i = 0; i < ordered.Count; i++)
+                Panel.SetZIndex(ordered[i], i);
         }
 
         private void UpdateGuidelines(Grid moving)
