@@ -151,6 +151,8 @@ namespace CardCreator.Models {
         OnPropertyChanged();
       }
     }
+    public IEnumerable<Stretch> StretchModes { get; } = Enum.GetValues(typeof(Stretch)).Cast<Stretch>();
+
     public string ImageSourcePath {
       get{
         if(Element is Image img && img.Source is System.Windows.Media.Imaging.BitmapImage bi)
@@ -167,7 +169,18 @@ namespace CardCreator.Models {
         }
       }
     }
-    public Stretch ImageStretch { get=> (Element as Image)?.Stretch ?? Stretch.Uniform; set{ if(Element is Image img){ img.Stretch=value; OnPropertyChanged(); } } }
+    public Stretch ImageStretch
+    {
+      get => (Element as Image)?.Stretch ?? Stretch.Uniform;
+      set
+      {
+        if (Element is Image img)
+        {
+          img.Stretch = value;
+          OnPropertyChanged();
+        }
+      }
+    }
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? name=null)=> PropertyChanged?.Invoke(this,new PropertyChangedEventArgs(name));
   }

@@ -107,12 +107,15 @@ public partial class MainWindow : Window
     {
         if (VM.Inspector.Element is not RichTextBox rtb)
             return;
-        var dlg = new WinForms.ColorDialog();
         var c = GetSelectionColor(rtb);
-        dlg.Color = DrawingColor.FromArgb(c.A, c.R, c.G, c.B);
-        if (dlg.ShowDialog() == WinForms.DialogResult.OK)
+        var dlg = new ColorPickerDialog
         {
-            var color = Color.FromArgb(dlg.Color.A, dlg.Color.R, dlg.Color.G, dlg.Color.B);
+            Owner = this,
+            SelectedColor = Color.FromArgb(c.A, c.R, c.G, c.B)
+        };
+        if (dlg.ShowDialog() == true)
+        {
+            var color = dlg.SelectedColor;
             var sel = new TextRange(rtb.Selection.Start, rtb.Selection.End);
             sel.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(color));
             UpdateFontToolbarFormatting();
@@ -121,11 +124,18 @@ public partial class MainWindow : Window
     }
     private void PickBackgroundColor_Click(object s, RoutedEventArgs e)
     {
-        var dlg = new WinForms.ColorDialog();
-        dlg.Color = DrawingColor.FromArgb(_richTextBackgroundColor.A, _richTextBackgroundColor.R, _richTextBackgroundColor.G, _richTextBackgroundColor.B);
-        if (dlg.ShowDialog() == WinForms.DialogResult.OK)
+        var dlg = new ColorPickerDialog
         {
-            var color = Color.FromArgb(dlg.Color.A, dlg.Color.R, dlg.Color.G, dlg.Color.B);
+            Owner = this,
+            SelectedColor = Color.FromArgb(
+                _richTextBackgroundColor.A,
+                _richTextBackgroundColor.R,
+                _richTextBackgroundColor.G,
+                _richTextBackgroundColor.B)
+        };
+        if (dlg.ShowDialog() == true)
+        {
+            var color = dlg.SelectedColor;
             _richTextBackgroundColor = color;
             if (VM.Inspector.Element is RichTextBox rtb)
             {
