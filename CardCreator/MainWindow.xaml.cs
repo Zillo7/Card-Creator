@@ -1532,6 +1532,7 @@ public class MainViewModel : INotifyPropertyChanged
             }
         }
         headers.AddRange(otherColumns.Select(col => $"{col.control}.{col.prop}"));
+        headers.AddRange(placeholderColumns.Select(col => $"{col.control}.[{col.placeholder}]"));
         headers.AddRange(textColumns.Select(col => $"{col.control}.{col.prop}"));
         headers.AddRange(placeholderColumns.Select(col => $"{col.control}.[{col.placeholder}]"));
         var sb = new StringBuilder();
@@ -1559,6 +1560,8 @@ public class MainViewModel : INotifyPropertyChanged
             }
             foreach (var (control, prop) in otherColumns)
                 values.Add(CsvEscape(GetFieldValue(control, prop)));
+            foreach (var (control, placeholder) in placeholderColumns)
+                values.Add(CsvEscape(GetPlaceholderValue(control, placeholder)));
             foreach (var (control, prop) in textColumns)
                 values.Add(CsvEscape(GetFieldValue(control, prop)));
             foreach (var (control, placeholder) in placeholderColumns)
