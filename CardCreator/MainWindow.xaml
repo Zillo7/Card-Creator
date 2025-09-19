@@ -218,6 +218,7 @@
                                 <Grid Visibility="{Binding IsImage, Converter={StaticResource BoolToVis}}" Margin="0,10,0,0">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="60"/>
@@ -228,6 +229,8 @@
                                         <TextBox Width="130" Text="{Binding ImageSourcePath, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
                                         <Button Content="Browse…" Click="BrowseImage_Click" Margin="6,0,0,0"/>
                                     </StackPanel>
+                                    <TextBlock Text="Stretch:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" TextAlignment="Right"/>
+                                    <ComboBox Grid.Row="1" Grid.Column="1" Width="130" ItemsSource="{Binding StretchModes}" SelectedItem="{Binding ImageStretch, UpdateSourceTrigger=PropertyChanged}"/>
                                 </Grid>
                             </StackPanel>
                         </StackPanel>
