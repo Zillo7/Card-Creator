@@ -1510,6 +1510,7 @@ public class MainViewModel : INotifyPropertyChanged
         var otherColumns = new List<(string control, string prop)>();
         var textColumns = new List<(string control, string prop)>();
         var placeholderColumns = new List<(string control, string placeholder)>();
+        var placeholderColumnKeys = new HashSet<string>(StringComparer.Ordinal);
         var placeholderMap = GetPlaceholderMapFromCards();
         if (placeholderMap.Count == 0)
             placeholderMap = GetPlaceholderMapFromTemplate();
@@ -1522,7 +1523,11 @@ public class MainViewModel : INotifyPropertyChanged
                 if (placeholderMap.TryGetValue(c.name, out var placeholders))
                 {
                     foreach (var placeholder in placeholders.OrderBy(p => p, StringComparer.Ordinal))
-                        placeholderColumns.Add((c.name, placeholder));
+                    {
+                        var key = $"{c.name}\u001f{placeholder}";
+                        if (placeholderColumnKeys.Add(key))
+                            placeholderColumns.Add((c.name, placeholder));
+                    }
                 }
             }
             else if (c.type == "Image")
