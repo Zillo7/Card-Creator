@@ -996,8 +996,8 @@ namespace CardCreator
                     double w = fe.Width;
                     double h = fe.Height;
                     var container = CreateContainer(fe, item.X, item.Y, w, h, useSnap: false);
-                    if (fe is Image img && img.Visibility == Visibility.Visible && img.Source != null)
-                        container.Background = Brushes.White;
+                    if (fe is Image)
+                        container.Background = Brushes.Transparent;
                     if (fe.Tag is string t && !string.IsNullOrWhiteSpace(t))
                         container.Tag = t;
                     _canvas.Children.Add(container);
@@ -1471,8 +1471,8 @@ namespace CardCreator
             if (field.Hidden.HasValue)
             {
                 el.Visibility = field.Hidden.Value ? Visibility.Hidden : Visibility.Visible;
-                if (el.Parent is Grid g && el is Image img)
-                    g.Background = (field.Hidden.Value || img.Source == null) ? Brushes.Transparent : Brushes.White;
+                if (el.Parent is Grid g && el is Image)
+                    g.Background = Brushes.Transparent;
             }
             if (el is RichTextBox tb)
             {
@@ -1502,6 +1502,8 @@ namespace CardCreator
                 }
                 if (field.Stretch != null && Enum.TryParse<Stretch>(field.Stretch, out var st))
                     img.Stretch = st;
+                if (img.Parent is Grid grid)
+                    grid.Background = Brushes.Transparent;
             }
         }
 
