@@ -1523,9 +1523,6 @@ public class MainViewModel : INotifyPropertyChanged
                     {
                         var key = $"{c.name}\u001f{placeholder}";
                         if (placeholderColumnKeys.Add(key))
-                            columns.Add((c.name, null, placeholder));
-                    }
-                }
                 columns.Add((c.name, "Text", null));
             }
             else if (c.type == "Image")
