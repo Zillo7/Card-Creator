@@ -501,6 +501,8 @@ namespace CardCreator
                 if (g.Children.Count > 1 && g.Children[1] is Border b)
                     b.Visibility = Visibility.Visible;
                 Inspector.SetElement((FrameworkElement)g.Children[0]);
+                var rtb = FindAncestor<RichTextBox>(g);
+                rtb?.Focus();
                 return;
             }
             if (e.OriginalSource == _canvas)
@@ -618,14 +620,22 @@ namespace CardCreator
                 }
                 return;
             }
-            if (_selected.Count == 0)
-                return;
             if (e.Key == Key.Delete)
             {
+                if (_selectedRtbImage != null)
+                {
+                    DeleteSelectedInlineImage();
+                    e.Handled = true;
+                    return;
+                }
+                if (_selected.Count == 0)
+                    return;
                 DeleteSelected();
                 e.Handled = true;
                 return;
             }
+            if (_selected.Count == 0)
+                return;
             int step = (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) ? 10 : 1;
             bool handled = false;
             foreach (var c in _selected)
@@ -808,46 +818,52 @@ namespace CardCreator
         {
             if (sender is not RichTextBox rtb)
                 return;
-            var pos = e.GetPosition(rtb);
-            var pointer = rtb.GetPositionFromPoint(pos, true);
-            InlineUIContainer? iuic = null;
-            if (pointer != null)
+            var grid = TryGetInlineImageFromHit(rtb, e.OriginalSource as DependencyObject, e.GetPosition(rtb));
+            if (grid != null)
             {
-                Paragraph para = pointer.Parent as Paragraph;
-                Run run = pointer.Parent as Run;
+                e.Handled = true;
+                ClearSelection();
+                _selectedRtbImage = grid;
+                if (grid.Children.Count > 1 && grid.Children[1] is Border b)
+                    b.Visibility = Visibility.Visible;
+                Inspector.SetElement((FrameworkElement)grid.Children[0]);
+                rtb.Focus();
+                return;
+            }
+            if (_selectedRtbImage != null &&
+                _selectedRtbImage.Children.Count > 1 &&
+                _selectedRtbImage.Children[1] is Border border)
+                border.Visibility = Visibility.Collapsed;
+            _selectedRtbImage = null;
+            Inspector.SetElement(rtb);
+        }
 
-                if (para == null && run == null)
-                {
-                    iuic = pointer.Parent as InlineUIContainer;
-                }
-                else
-                {
-                    if (_selectedRtbImage != null &&
-                        _selectedRtbImage.Children.Count > 1 &&
-                        _selectedRtbImage.Children[1] is Border b)
-                        b.Visibility = Visibility.Collapsed;
-                    _selectedRtbImage = null;
-                    Inspector.SetElement(rtb);
-                }
-                if (iuic?.Child is Grid grid)
-                {
-                    e.Handled = true;
-                    ClearSelection();
-                    _selectedRtbImage = grid;
-                    if (grid.Children.Count > 1 && grid.Children[1] is Border b)
-                        b.Visibility = Visibility.Visible;
-                    Inspector.SetElement((FrameworkElement)grid.Children[0]);
-                }
-            }
-            else
+        private Grid? TryGetInlineImageFromHit(RichTextBox rtb, DependencyObject? source, Point position)
+        {
+            if (source != null)
             {
-                if (_selectedRtbImage != null &&
-                    _selectedRtbImage.Children.Count > 1 &&
-                    _selectedRtbImage.Children[1] is Border b)
-                    b.Visibility = Visibility.Collapsed;
-                _selectedRtbImage = null;
-                Inspector.SetElement(rtb);
+                var image = FindAncestor<Image>(source);
+                if (image != null)
+                {
+                    var grid = FindAncestor<Grid>(image);
+                    if (grid != null && grid.Children.Count > 0 && grid.Children[0] is Image &&
+                        FindAncestor<InlineUIContainer>(grid) != null)
+                        return grid;
+                }
             }
+            var hit = VisualTreeHelper.HitTest(rtb, position);
+            if (hit?.VisualHit is DependencyObject hitVisual)
+            {
+                var image = FindAncestor<Image>(hitVisual);
+                if (image != null)
+                {
+                    var grid = FindAncestor<Grid>(image);
+                    if (grid != null && grid.Children.Count > 0 && grid.Children[0] is Image &&
+                        FindAncestor<InlineUIContainer>(grid) != null)
+                        return grid;
+                }
+            }
+            return null;
         }
 
         private void AttachInlineImageChrome(Grid container)
@@ -2052,6 +2068,36 @@ namespace CardCreator
 
         private bool IsAdditiveSelect() => Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl) ||
                                            Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+
+        private void DeleteSelectedInlineImage()
+        {
+            if (_selectedRtbImage == null)
+                return;
+            if (_selectedRtbImage.Children.Count > 1 && _selectedRtbImage.Children[1] is Border b)
+                b.Visibility = Visibility.Collapsed;
+            var inline = FindAncestor<InlineUIContainer>(_selectedRtbImage);
+            var rtb = FindAncestor<RichTextBox>(_selectedRtbImage);
+            TextPointer? caret = inline?.ElementStart;
+            if (inline != null)
+            {
+                if (inline.Parent is Paragraph para)
+                    para.Inlines.Remove(inline);
+                else if (inline.Parent is Span span)
+                    span.Inlines.Remove(inline);
+            }
+            _selectedRtbImage = null;
+            if (rtb != null)
+            {
+                if (caret != null)
+                    rtb.CaretPosition = caret;
+                Inspector.SetElement(rtb);
+                rtb.Focus();
+            }
+            else
+            {
+                Inspector.SetElement(null);
+            }
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? name = null) =>
